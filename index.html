@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Clubes - CETEC 2026</title>
+    <title>Painel de Clubes - CETEC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -17,7 +17,7 @@
                         cetecOrange: '#F37021'
                     },
                     fontFamily: {
-                        sans: ['Nunito', 'ui-sans-serif', 'system-ui', 'sans-serif'], // Uma fonte mais arredondada
+                        sans: ['Nunito', 'ui-sans-serif', 'system-ui', 'sans-serif'],
                     }
                 }
             }
@@ -27,300 +27,370 @@
     <style>
         .hidden { display: none !important; }
         
-        /* Efeito 3D para botões estilo app moderno */
-        .btn-3d {
-            transition: all 0.1s ease-in-out;
-        }
+        .btn-3d { transition: all 0.1s ease-in-out; }
         .btn-3d:active {
             transform: translateY(4px);
             border-bottom-width: 0px !important;
-            margin-top: 4px; /* Compensa a perda da borda para não mover os elementos abaixo */
+            margin-top: 4px;
         }
 
-        /* Esconde a barra de rolagem mas permite rolar */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        
+        /* Oculta a barra de rolagem mas mantém a funcionalidade */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="bg-[#F7F9FC] font-sans text-gray-800 selection:bg-cetecGreen selection:text-white">
+<body class="bg-[#F7F9FC] font-sans text-gray-800 selection:bg-cetecGreen selection:text-white overflow-hidden h-screen w-screen">
 
-    <div id="login-screen" class="flex items-center justify-center h-screen bg-cetecBlue">
-        <div class="bg-white p-10 rounded-[2rem] shadow-2xl w-[400px] text-center border-b-[8px] border-cetecBlueDark">
+    <div id="login-screen" class="flex items-center justify-center h-screen w-screen bg-cetecBlue z-50 fixed inset-0">
+        <div class="bg-white p-8 rounded-[2rem] shadow-2xl w-[400px] text-center border-b-[8px] border-cetecBlueDark">
             <h1 class="text-3xl font-extrabold text-cetecBlue mb-8 tracking-tight">Painel de Clubes</h1>
-            <form id="login-form" class="space-y-5">
-                <input type="email" id="email" placeholder="E-mail" value="123@gmail.com" class="w-full px-5 py-4 bg-gray-50 border-2 border-gray-200 rounded-2xl focus:outline-none focus:border-cetecGreen focus:bg-white transition font-semibold text-gray-700" required>
-                <input type="password" id="password" placeholder="Senha" value="12345678" class="w-full px-5 py-4 bg-gray-50 border-2 border-gray-200 rounded-2xl focus:outline-none focus:border-cetecGreen focus:bg-white transition font-semibold text-gray-700" required>
-                
-                <button type="submit" class="btn-3d w-full bg-cetecGreen text-white font-extrabold text-lg py-4 px-4 rounded-2xl border-b-[6px] border-cetecGreenDark hover:bg-[#7ed152]">
-                    ENTRAR
-                </button>
+            <form id="login-form" class="space-y-4">
+                <input type="email" id="email" placeholder="E-mail" value="123@gmail.com" class="w-full px-5 py-3 bg-gray-50 border-2 border-gray-200 rounded-2xl focus:outline-none focus:border-cetecGreen font-semibold text-gray-700" required>
+                <input type="password" id="password" placeholder="Senha" value="12345678" class="w-full px-5 py-3 bg-gray-50 border-2 border-gray-200 rounded-2xl focus:outline-none focus:border-cetecGreen font-semibold text-gray-700" required>
+                <button type="submit" class="btn-3d w-full bg-cetecGreen text-white font-extrabold text-lg py-3 px-4 rounded-2xl border-b-[6px] border-cetecGreenDark hover:bg-[#7ed152]">ENTRAR</button>
                 <p id="login-error" class="text-red-500 font-bold text-sm hidden">Credenciais incorretas.</p>
             </form>
         </div>
     </div>
 
-    <div id="main-app" class="hidden flex h-screen overflow-hidden">
+    <div id="main-app" class="hidden flex h-screen w-screen overflow-hidden">
         
-        <aside class="w-72 bg-cetecBlue text-white flex flex-col rounded-r-[2rem] shadow-xl z-10 border-r-4 border-cetecBlueDark">
-            <div class="p-8 pb-4">
-                <h2 class="text-2xl font-black font-mono tracking-widest text-cetecGreen">EDUCA<span class="text-white">/CODE</span></h2>
-                <div class="h-1 w-12 bg-cetecOrange rounded-full mt-2"></div>
+        <aside class="w-64 bg-cetecBlue text-white flex flex-col rounded-r-[2rem] shadow-xl z-10 border-r-4 border-cetecBlueDark shrink-0">
+            <div class="p-6 pb-2">
+                <h2 class="text-xl font-black font-mono tracking-widest text-cetecGreen">EDUCA<span class="text-white">/CODE</span></h2>
+                <div class="h-1 w-10 bg-cetecOrange rounded-full mt-2"></div>
             </div>
-            <nav class="flex-1 p-4 space-y-3 mt-4">
-                <button onclick="navigate('view-clubes', this)" class="nav-btn w-full text-left px-6 py-4 rounded-2xl bg-white/10 font-bold hover:bg-white/20 transition flex items-center border-b-4 border-transparent hover:border-white/20">
-                    <span class="mr-3 text-xl">🧩</span> Clubes
-                </button>
-                <button onclick="navigate('view-alunos', this)" class="nav-btn w-full text-left px-6 py-4 rounded-2xl font-bold hover:bg-white/10 transition flex items-center border-b-4 border-transparent hover:border-white/10">
-                    <span class="mr-3 text-xl">👩‍💻</span> Alunos
-                </button>
-                <button onclick="navigate('view-cronograma', this)" class="nav-btn w-full text-left px-6 py-4 rounded-2xl font-bold hover:bg-white/10 transition flex items-center border-b-4 border-transparent hover:border-white/10">
-                    <span class="mr-3 text-xl">📅</span> Cronograma
+            <nav class="flex-1 p-4 space-y-2 mt-2">
+                <button onclick="navigate('view-clubes', this)" class="nav-btn w-full text-left px-5 py-3 rounded-2xl bg-white/10 font-bold hover:bg-white/20 transition flex items-center border-b-4 border-transparent hover:border-white/20 text-sm">
+                    <span class="mr-3 text-lg">🧩</span> Clubes
                 </button>
             </nav>
-            <div class="p-6">
-                <button onclick="logout()" class="w-full text-center px-4 py-3 bg-red-500/20 text-red-200 font-bold rounded-2xl hover:bg-red-500 hover:text-white transition">
-                    Sair
-                </button>
+            <div class="p-4">
+                <button onclick="logout()" class="w-full text-center px-4 py-2 bg-red-500/20 text-red-200 font-bold rounded-2xl hover:bg-red-500 hover:text-white transition text-sm">Sair</button>
             </div>
         </aside>
 
-        <main class="flex-1 flex flex-col h-screen overflow-y-auto no-scrollbar relative">
+        <main class="flex-1 flex flex-col h-screen overflow-hidden relative bg-[#F7F9FC]">
             
-            <header class="pt-10 pb-6 px-10">
-                <h2 id="page-title" class="text-3xl font-extrabold text-cetecBlue">Visão Geral dos Clubes</h2>
+            <header class="pt-6 pb-4 px-8 shrink-0 flex justify-between items-center">
+                <h2 id="page-title" class="text-2xl font-extrabold text-cetecBlue">Visão Geral dos Clubes</h2>
             </header>
 
-            <div class="px-10 pb-10 flex-1">
+            <div class="px-8 pb-6 flex-1 flex flex-col min-h-0 overflow-hidden">
                 
-                <div id="view-clubes">
+                <div id="view-clubes" class="flex-1 overflow-y-auto no-scrollbar pb-4">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        
-                        <div onclick="openModal('CLUBE UTEC GREGÓRIO 01')" class="bg-white rounded-[2rem] p-6 border-2 border-gray-100 hover:border-cetecGreen cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all group flex flex-col justify-between min-h-[160px]">
-                            
-                            <h3 class="text-xl font-extrabold text-cetecBlue group-hover:text-cetecGreen transition-colors">CLUBE UTEC GREGÓRIO 01</h3>
-                            
-                            <div class="flex flex-wrap gap-2 mt-4">
-                                <span class="bg-green-100 text-green-700 font-bold text-xs px-3 py-1.5 rounded-full flex items-center">
-                                    <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div> Iniciado
-                                </span>
-                                <span class="bg-blue-50 text-cetecBlue font-bold text-xs px-3 py-1.5 rounded-full border border-blue-100">
-                                    30 Alunos
-                                </span>
-                                <span class="bg-gray-100 text-gray-600 font-bold text-xs px-3 py-1.5 rounded-full">
-                                    14h às 16h
-                                </span>
+                        <div onclick="openClubeDetails('CLUBE UTEC GREGÓRIO 01')" class="bg-white rounded-[2rem] p-5 border-2 border-gray-100 hover:border-cetecGreen cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all group flex flex-col justify-between min-h-[140px]">
+                            <h3 class="text-lg font-extrabold text-cetecBlue group-hover:text-cetecGreen transition-colors">CLUBE UTEC GREGÓRIO 01</h3>
+                            <div class="flex flex-wrap gap-2 mt-3">
+                                <span class="bg-green-100 text-green-700 font-bold text-[10px] px-2 py-1 rounded-full flex items-center"><div class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></div> Iniciado</span>
+                                <span id="contador-alunos-card" class="bg-blue-50 text-cetecBlue font-bold text-[10px] px-2 py-1 rounded-full border border-blue-100">0 Alunos</span>
                             </div>
                         </div>
-
-                        <div onclick="openModal('CLUBE UTEC MACAXEIRA 01')" class="bg-white rounded-[2rem] p-6 border-2 border-gray-100 hover:border-cetecGreen cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all group flex flex-col justify-between min-h-[160px]">
-                            <h3 class="text-xl font-extrabold text-cetecBlue group-hover:text-cetecGreen transition-colors">CLUBE UTEC MACAXEIRA 01</h3>
-                            <div class="flex flex-wrap gap-2 mt-4">
-                                <span class="bg-orange-100 text-orange-700 font-bold text-xs px-3 py-1.5 rounded-full flex items-center">
-                                    <div class="w-2 h-2 bg-orange-500 rounded-full mr-2"></div> Pendente
-                                </span>
-                                <span class="bg-blue-50 text-cetecBlue font-bold text-xs px-3 py-1.5 rounded-full border border-blue-100">
-                                    15 Alunos
-                                </span>
-                                <span class="bg-gray-100 text-gray-600 font-bold text-xs px-3 py-1.5 rounded-full">
-                                    09h às 11h
-                                </span>
-                            </div>
-                        </div>
-                        
                     </div>
                 </div>
 
-                <div id="view-alunos" class="hidden">
-                    <div class="flex justify-between items-center mb-8">
-                        <p class="text-gray-500 font-semibold">Gerencie os alunos matriculados nos clubes.</p>
-                        <button class="btn-3d bg-cetecBlue text-white font-bold py-3 px-6 rounded-2xl border-b-[6px] border-cetecBlueDark hover:bg-[#022882]">
-                            + Novo Aluno
+                <div id="view-clube-detalhes" class="hidden flex-col h-full animate-[fadeIn_0.3s_ease-in-out] overflow-hidden">
+                    
+                    <div class="shrink-0 mb-4 flex gap-4 items-center">
+                        <button onclick="navigate('view-clubes', document.querySelectorAll('.nav-btn')[0])" class="text-gray-500 font-extrabold hover:text-cetecBlue flex items-center transition bg-white px-4 py-2 rounded-full shadow-sm border-2 border-gray-100 hover:border-cetecBlue text-sm">
+                            <span class="mr-2 text-lg leading-none">←</span> Voltar
                         </button>
                     </div>
-                    <div class="bg-white rounded-[2rem] border-2 border-gray-100 overflow-hidden">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-gray-50 border-b-2 border-gray-100">
-                                    <th class="p-5 text-sm font-extrabold text-gray-500 uppercase tracking-wider">Nome</th>
-                                    <th class="p-5 text-sm font-extrabold text-gray-500 uppercase tracking-wider">Clube</th>
-                                    <th class="p-5 text-sm font-extrabold text-gray-500 uppercase tracking-wider text-right">Ação</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="border-b-2 border-gray-50 hover:bg-gray-50 transition">
-                                    <td class="p-5 font-bold text-gray-800">João Pedro Santos</td>
-                                    <td class="p-5 font-semibold text-gray-500">CLUBE UTEC GREGÓRIO 01</td>
-                                    <td class="p-5 text-right"><button class="text-cetecOrange font-bold hover:underline bg-orange-50 px-3 py-1 rounded-full">Editar</button></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
 
-                <div id="view-cronograma" class="hidden">
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <div class="bg-white rounded-[2rem] border-2 border-gray-100 p-8 relative overflow-hidden">
-                            <div class="absolute top-0 left-0 w-full h-2 bg-cetecGreen"></div>
-                            <h4 class="font-extrabold text-2xl text-cetecBlue mb-6">Módulo 1: Introdução</h4>
-                            <div class="space-y-4">
-                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border-2 border-transparent hover:border-gray-200 transition">
-                                    <span class="font-bold text-gray-700">1. Lógica Básica</span>
-                                    <button onclick="toggleStatus(this)" class="btn-3d status-btn bg-green-500 text-white font-extrabold text-xs px-4 py-2 rounded-xl border-b-4 border-green-700">
-                                        FEITO
-                                    </button>
-                                </div>
-                                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border-2 border-transparent hover:border-gray-200 transition">
-                                    <span class="font-bold text-gray-700">2. Sensores</span>
-                                    <button onclick="toggleStatus(this)" class="btn-3d status-btn bg-red-500 text-white font-extrabold text-xs px-4 py-2 rounded-xl border-b-4 border-red-700">
-                                        A FAZER
-                                    </button>
-                                </div>
+                    <div class="bg-white rounded-[1.5rem] p-5 border-2 border-gray-100 shadow-sm mb-6 flex justify-between items-center relative overflow-hidden shrink-0">
+                        <div class="absolute top-0 left-0 w-2 h-full bg-cetecGreen"></div>
+                        <div>
+                            <h3 id="detalhes-titulo" class="text-2xl font-black text-cetecBlue mb-2 tracking-tight">Nome do Clube</h3>
+                            <div class="flex gap-2 flex-wrap">
+                                <span class="bg-blue-50 text-cetecBlue font-bold text-xs px-3 py-1.5 rounded-xl border border-blue-100">UTEC Gregório Bezerra</span>
+                                <span class="bg-blue-50 text-cetecBlue font-bold text-xs px-3 py-1.5 rounded-xl border border-blue-100">Profª Maria Silva</span>
+                                <span class="bg-orange-50 text-cetecOrange font-bold text-xs px-3 py-1.5 rounded-xl border border-orange-100">📍 Sala de Robótica</span>
                             </div>
+                        </div>
+                        <div class="text-right flex flex-col items-end">
+                            <select onchange="changeClubStatus(this)" class="bg-green-100 text-green-700 font-black text-xs px-3 py-1.5 rounded-xl mb-1.5 border-2 border-green-200 outline-none cursor-pointer">
+                                <option value="iniciado" selected>🟢 Iniciado</option>
+                                <option value="pendente">🟠 Pendente</option>
+                            </select>
+                            <span class="bg-gray-100 text-gray-600 font-bold text-xs px-3 py-1.5 rounded-xl">Ter & Qui • 14h às 16h</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 flex-1 min-h-0 overflow-hidden">
+                        
+                        <div class="bg-white rounded-[1.5rem] border-2 border-gray-100 p-5 flex flex-col shadow-sm h-full overflow-hidden">
+                            <div class="flex justify-between items-center mb-4 shrink-0">
+                                <h4 class="font-black text-lg text-cetecBlue">Alunos</h4>
+                                <button onclick="openAlunoModal()" class="btn-3d bg-cetecBlue text-white font-extrabold py-1.5 px-4 rounded-xl border-b-[4px] border-cetecBlueDark text-xs">+ Adicionar</button>
+                            </div>
+                            <div class="bg-gray-50 rounded-2xl p-3 border-2 border-gray-100 flex-1 overflow-y-auto no-scrollbar">
+                                <ul id="lista-alunos-clube" class="space-y-2 font-semibold text-gray-600">
+                                    </ul>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-[1.5rem] border-2 border-gray-100 p-5 flex flex-col shadow-sm h-full overflow-hidden relative">
+                             <div class="flex justify-between items-center mb-4 shrink-0">
+                                 <div>
+                                     <h4 class="font-black text-lg text-cetecBlue">Cronograma</h4>
+                                 </div>
+                                 <button onclick="openEncontroModal()" class="btn-3d bg-cetecGreen text-white font-extrabold py-1.5 px-4 rounded-xl border-b-[4px] border-cetecGreenDark hover:bg-[#7ed152] text-xs flex items-center">
+                                     + Encontro
+                                 </button>
+                             </div>
+                             
+                             <div class="space-y-3 flex-1 overflow-y-auto no-scrollbar pr-1 pb-2">
+                                
+                                <details class="bg-gray-50 rounded-xl border-2 border-gray-200 group" open>
+                                    <summary class="font-black text-cetecBlue p-3 text-sm cursor-pointer hover:bg-gray-100 transition rounded-xl flex justify-between items-center outline-none">
+                                        1. SCRATCH
+                                        <span class="text-cetecGreen text-lg font-bold group-open:rotate-180 transition-transform">▼</span>
+                                    </summary>
+                                    <div id="lista-scratch" class="p-3 pt-0 space-y-2 border-t-2 border-gray-200 mt-1 flex flex-col gap-1"></div>
+                                </details>
+
+                                <details class="bg-gray-50 rounded-xl border-2 border-gray-200 group" open>
+                                    <summary class="font-black text-cetecBlue p-3 text-sm cursor-pointer hover:bg-gray-100 transition rounded-xl flex justify-between items-center outline-none">
+                                        2. EV3
+                                        <span class="text-cetecGreen text-lg font-bold group-open:rotate-180 transition-transform">▼</span>
+                                    </summary>
+                                    <div id="lista-ev3" class="p-3 pt-0 space-y-2 border-t-2 border-gray-200 mt-1 flex flex-col gap-1"></div>
+                                </details>
+
+                                <details class="bg-gray-50 rounded-xl border-2 border-gray-200 group">
+                                    <summary class="font-black text-cetecBlue p-3 text-sm cursor-pointer hover:bg-gray-100 transition rounded-xl flex justify-between items-center outline-none">
+                                        3. MAKER / ARDUINO
+                                        <span class="text-cetecGreen text-lg font-bold group-open:rotate-180 transition-transform">▼</span>
+                                    </summary>
+                                    <div id="lista-maker" class="p-3 pt-0 space-y-2 border-t-2 border-gray-200 mt-1 flex flex-col gap-1"></div>
+                                </details>
+
+                                <details class="bg-gray-50 rounded-xl border-2 border-gray-200 group">
+                                    <summary class="font-black text-cetecBlue p-3 text-sm cursor-pointer hover:bg-gray-100 transition rounded-xl flex justify-between items-center outline-none">
+                                        4. PYTHON
+                                        <span class="text-cetecGreen text-lg font-bold group-open:rotate-180 transition-transform">▼</span>
+                                    </summary>
+                                    <div id="lista-python" class="p-3 pt-0 space-y-2 border-t-2 border-gray-200 mt-1 flex flex-col gap-1"></div>
+                                </details>
+
+                             </div>
                         </div>
                     </div>
                 </div>
-
             </div>
         </main>
     </div>
 
-    <div id="modal-detalhes" class="hidden fixed inset-0 bg-cetecBlue/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-[2rem] w-[500px] max-w-full shadow-2xl flex flex-col max-h-[90vh] border-b-[8px] border-gray-200 transform scale-95 transition-transform duration-200" id="modal-content">
-            
-            <div class="p-8 pb-4 border-b-2 border-gray-100 flex justify-between items-start">
-                <div>
-                    <h3 id="modal-title" class="text-2xl font-black text-cetecBlue mb-2">Nome do Clube</h3>
-                    <div class="flex gap-2">
-                        <span class="bg-gray-100 text-gray-600 font-bold text-xs px-3 py-1 rounded-full">Terça e Quinta</span>
-                        <span class="bg-gray-100 text-gray-600 font-bold text-xs px-3 py-1 rounded-full">Tarde</span>
-                    </div>
-                </div>
-                <button onclick="closeModal()" class="bg-gray-100 text-gray-500 hover:bg-gray-200 w-10 h-10 rounded-full font-bold flex items-center justify-center transition">
-                    X
-                </button>
+    <div id="modal-encontro" class="hidden fixed inset-0 bg-cetecBlue/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2rem] w-[400px] max-w-full shadow-2xl flex flex-col border-b-[8px] border-cetecGreen transform scale-95 transition-transform duration-200" id="modal-encontro-content">
+            <div class="p-6 pb-3 border-b-2 border-gray-100 flex justify-between items-start">
+                <h3 class="text-xl font-black text-cetecBlue">Adicionar Encontro</h3>
+                <button onclick="closeModal('modal-encontro', 'modal-encontro-content')" class="bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-red-500 w-8 h-8 rounded-full font-bold flex items-center justify-center transition">X</button>
             </div>
-
-            <div class="p-8 overflow-y-auto no-scrollbar">
-                
-                <div class="grid grid-cols-2 gap-4 mb-8">
-                    <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100">
-                        <p class="text-xs font-bold text-blue-400 uppercase tracking-wide mb-1">UTEC</p>
-                        <p class="font-extrabold text-cetecBlue">Gregório Bezerra</p>
-                    </div>
-                    <div class="bg-blue-50 p-4 rounded-2xl border border-blue-100">
-                        <p class="text-xs font-bold text-blue-400 uppercase tracking-wide mb-1">Professora</p>
-                        <p class="font-extrabold text-cetecBlue">Maria Silva</p>
-                    </div>
-                </div>
-
+            <form id="form-encontro" class="p-6 space-y-4">
                 <div>
-                    <div class="flex justify-between items-center mb-4">
-                        <h4 class="font-extrabold text-lg text-gray-800">Alunos (30)</h4>
-                        <button onclick="navigate('view-alunos', document.querySelectorAll('.nav-btn')[1]); closeModal();" class="text-cetecGreen font-bold text-sm hover:underline">
-                            + Adicionar
-                        </button>
-                    </div>
-                    <div class="bg-gray-50 rounded-2xl p-2 border-2 border-gray-100">
-                        <ul class="space-y-1 max-h-40 overflow-y-auto pr-2 no-scrollbar font-semibold text-gray-600">
-                            <li class="p-2 hover:bg-white rounded-xl transition cursor-default">1. João Pedro Santos</li>
-                            <li class="p-2 hover:bg-white rounded-xl transition cursor-default">2. Ana Beatriz Lima</li>
-                            <li class="p-2 hover:bg-white rounded-xl transition cursor-default">3. Carlos Eduardo</li>
-                            </ul>
-                    </div>
+                    <label class="block text-xs font-extrabold text-gray-500 mb-1 uppercase">Módulo</label>
+                    <select id="input-modulo" class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cetecGreen font-bold text-cetecBlue cursor-pointer appearance-none text-sm" required>
+                        <option value="lista-scratch">1. SCRATCH</option>
+                        <option value="lista-ev3">2. EV3</option>
+                        <option value="lista-maker">3. MAKER / ARDUINO</option>
+                        <option value="lista-python">4. PYTHON</option>
+                    </select>
                 </div>
+                <div>
+                    <label class="block text-xs font-extrabold text-gray-500 mb-1 uppercase">Assunto</label>
+                    <input type="text" id="input-titulo" placeholder="Ex: Motores e Sensores" class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cetecGreen font-semibold text-gray-700 text-sm" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-extrabold text-gray-500 mb-1 uppercase">Data</label>
+                    <input type="date" id="input-data" class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cetecGreen font-semibold text-gray-700 cursor-pointer text-sm" required>
+                </div>
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="closeModal('modal-encontro', 'modal-encontro-content')" class="btn-3d w-1/3 bg-gray-200 text-gray-600 font-extrabold py-3 rounded-xl border-b-[4px] border-gray-300 hover:bg-gray-300 text-sm">Cancelar</button>
+                    <button type="submit" class="btn-3d w-2/3 bg-cetecGreen text-white font-extrabold py-3 rounded-xl border-b-[4px] border-cetecGreenDark hover:bg-[#7ed152] text-sm">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-aluno" class="hidden fixed inset-0 bg-cetecBlue/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2rem] w-[400px] max-w-full shadow-2xl flex flex-col border-b-[8px] border-cetecBlue transform scale-95 transition-transform duration-200" id="modal-aluno-content">
+            <div class="p-6 pb-3 border-b-2 border-gray-100 flex justify-between items-start">
+                <h3 class="text-xl font-black text-cetecBlue">Vincular Aluno</h3>
+                <button onclick="closeModal('modal-aluno', 'modal-aluno-content')" class="bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-red-500 w-8 h-8 rounded-full font-bold flex items-center justify-center transition">X</button>
             </div>
-            
+            <form id="form-aluno" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-xs font-extrabold text-gray-500 mb-1 uppercase">Matrícula (Opcional)</label>
+                    <input type="text" id="input-aluno-matricula" placeholder="Ex: 20261234" class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cetecBlue font-semibold text-gray-700 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-extrabold text-gray-500 mb-1 uppercase">Nome Completo</label>
+                    <input type="text" id="input-aluno-nome" placeholder="Nome do aluno" class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cetecBlue font-semibold text-gray-700 text-sm" required>
+                </div>
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="closeModal('modal-aluno', 'modal-aluno-content')" class="btn-3d w-1/3 bg-gray-200 text-gray-600 font-extrabold py-3 rounded-xl border-b-[4px] border-gray-300 hover:bg-gray-300 text-sm">Cancelar</button>
+                    <button type="submit" class="btn-3d w-2/3 bg-cetecBlue text-white font-extrabold py-3 rounded-xl border-b-[4px] border-cetecBlueDark hover:bg-[#022882] text-sm">Adicionar</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <script>
-        // Login
+        let contadorAlunos = 0;
+
         document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            if (email === '123@gmail.com' && password === '12345678') {
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('main-app').classList.remove('hidden');
-            } else {
-                document.getElementById('login-error').classList.remove('hidden');
-            }
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
         });
 
         function logout() {
             document.getElementById('main-app').classList.add('hidden');
             document.getElementById('login-screen').classList.remove('hidden');
-            document.getElementById('login-error').classList.add('hidden');
             navigate('view-clubes', document.querySelectorAll('.nav-btn')[0]); 
         }
 
-        // Navegação SPA e Menu Ativo
         function navigate(viewId, btnElement) {
-            // Esconde todas as views
             document.getElementById('view-clubes').classList.add('hidden');
-            document.getElementById('view-alunos').classList.add('hidden');
-            document.getElementById('view-cronograma').classList.add('hidden');
-            
-            // Mostra a selecionada
+            document.getElementById('view-clube-detalhes').classList.add('hidden');
             document.getElementById(viewId).classList.remove('hidden');
-
-            // Atualiza Título
-            const titulos = {
-                'view-clubes': 'Visão Geral dos Clubes',
-                'view-alunos': 'Gestão de Alunos',
-                'view-cronograma': 'Cronograma'
-            };
-            document.getElementById('page-title').innerText = titulos[viewId];
-
-            // Atualiza estilo do botão ativo no menu
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.classList.remove('bg-white/10');
-            });
-            if(btnElement) {
-                btnElement.classList.add('bg-white/10');
-            }
+            document.getElementById(viewId).style.display = viewId === 'view-clube-detalhes' ? 'flex' : 'block';
+            document.getElementById('page-title').innerText = viewId === 'view-clubes' ? 'Visão Geral dos Clubes' : 'Detalhes do Clube';
         }
 
-        // Modal
-        function openModal(nomeClube) {
-            document.getElementById('modal-title').innerText = nomeClube;
-            const modal = document.getElementById('modal-detalhes');
-            const content = document.getElementById('modal-content');
-            
+        function openClubeDetails(nomeClube) {
+            document.getElementById('detalhes-titulo').innerText = nomeClube;
+            document.getElementById('view-clubes').classList.add('hidden');
+            const telaDetalhes = document.getElementById('view-clube-detalhes');
+            telaDetalhes.classList.remove('hidden');
+            telaDetalhes.style.display = 'flex';
+            document.getElementById('page-title').innerText = 'Painel do Clube';
+        }
+
+        function openModal(modalId, contentId) {
+            const modal = document.getElementById(modalId);
+            const content = document.getElementById(contentId);
             modal.classList.remove('hidden');
-            // Pequeno delay para a animação de scale funcionar (Efeito App)
             setTimeout(() => {
                 content.classList.remove('scale-95');
                 content.classList.add('scale-100');
             }, 10);
         }
 
-        function closeModal() {
-            const modal = document.getElementById('modal-detalhes');
-            const content = document.getElementById('modal-content');
-            
+        function closeModal(modalId, contentId) {
+            const modal = document.getElementById(modalId);
+            const content = document.getElementById(contentId);
             content.classList.remove('scale-100');
             content.classList.add('scale-95');
-            
             setTimeout(() => {
                 modal.classList.add('hidden');
+                if (modalId === 'modal-encontro') document.getElementById('form-encontro').reset();
+                if (modalId === 'modal-aluno') document.getElementById('form-aluno').reset();
             }, 200);
         }
 
-        // Botão Toggle Customizado para o Cronograma
+        function openEncontroModal() { openModal('modal-encontro', 'modal-encontro-content'); }
+        function openAlunoModal() { openModal('modal-aluno', 'modal-aluno-content'); }
+
+        function removerItem(botao) {
+            const item = botao.closest('li, .item-encontro');
+            if(item.tagName.toLowerCase() === 'li') {
+                contadorAlunos--;
+                document.getElementById('contador-alunos-card').innerText = contadorAlunos + " Alunos";
+            }
+            item.remove();
+        }
+
         function toggleStatus(btn) {
             if (btn.innerText.trim() === 'A FAZER') {
                 btn.innerText = 'FEITO';
-                btn.className = "btn-3d status-btn bg-green-500 text-white font-extrabold text-xs px-4 py-2 rounded-xl border-b-4 border-green-700";
+                btn.className = "btn-3d status-btn bg-green-500 text-white font-extrabold text-[9px] px-2 py-1 rounded border-b-[3px] border-green-700";
             } else {
                 btn.innerText = 'A FAZER';
-                btn.className = "btn-3d status-btn bg-red-500 text-white font-extrabold text-xs px-4 py-2 rounded-xl border-b-4 border-red-700";
+                btn.className = "btn-3d status-btn bg-red-500 text-white font-extrabold text-[9px] px-2 py-1 rounded border-b-[3px] border-red-700";
+            }
+        }
+
+        function changeClubStatus(selectElement) {
+            const valor = selectElement.value;
+            selectElement.classList.remove('bg-green-100', 'text-green-700', 'border-green-200', 'bg-orange-100', 'text-orange-700', 'border-orange-200');
+            if (valor === 'iniciado') {
+                selectElement.classList.add('bg-green-100', 'text-green-700', 'border-green-200');
+            } else {
+                selectElement.classList.add('bg-orange-100', 'text-orange-700', 'border-orange-200');
+            }
+        }
+
+        function formatarData(dataISO) {
+            if(!dataISO) return '';
+            const partes = dataISO.split('-');
+            return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        }
+
+        document.getElementById('form-encontro').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const moduloId = document.getElementById('input-modulo').value;
+            const titulo = document.getElementById('input-titulo').value;
+            const dataBruta = document.getElementById('input-data').value;
+            const dataFormatada = formatarData(dataBruta);
+
+            const encontroHTML = `
+                <div class="item-encontro flex items-center justify-between p-2.5 bg-white rounded-xl border-2 border-gray-100 animate-[fadeIn_0.3s_ease-in-out]">
+                    <div class="flex-1">
+                        <p class="font-bold text-gray-800 text-xs">${titulo}</p>
+                        <p class="text-[10px] text-gray-500 font-semibold mt-0.5">
+                            <span class="bg-gray-100 px-1.5 py-0.5 rounded">📅 ${dataFormatada}</span>
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="toggleStatus(this)" class="btn-3d status-btn bg-red-500 text-white font-extrabold text-[9px] px-2 py-1 rounded border-b-[3px] border-red-700">A FAZER</button>
+                        <button type="button" onclick="removerItem(this)" class="text-gray-300 hover:text-red-500 font-black text-sm transition" title="Remover">×</button>
+                    </div>
+                </div>
+            `;
+
+            const listaDestino = document.getElementById(moduloId);
+            listaDestino.insertAdjacentHTML('beforeend', encontroHTML);
+            listaDestino.parentElement.open = true;
+            closeModal('modal-encontro', 'modal-encontro-content');
+        });
+
+        document.getElementById('form-aluno').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const matricula = document.getElementById('input-aluno-matricula').value || 'S/ Matrícula';
+            const nome = document.getElementById('input-aluno-nome').value;
+
+            const alunoHTML = `
+                <li class="p-3 bg-white rounded-xl shadow-sm border-2 border-gray-100 flex justify-between items-center group animate-[fadeIn_0.3s_ease-in-out]">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-blue-50 border border-blue-100 text-cetecBlue rounded-full flex flex-col items-center justify-center mr-3">
+                            <span class="text-sm leading-none">👤</span>
+                        </div>
+                        <div>
+                            <span class="block text-gray-800 font-extrabold leading-tight text-sm">${nome}</span>
+                            <span class="block text-[10px] font-bold text-gray-400">Mat: ${matricula}</span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="removerItem(this)" class="text-red-400 hover:text-red-600 font-extrabold text-[10px] opacity-0 group-hover:opacity-100 transition px-2 py-1 rounded hover:bg-red-50">Remover</button>
+                </li>
+            `;
+
+            document.getElementById('lista-alunos-clube').insertAdjacentHTML('beforeend', alunoHTML);
+            contadorAlunos++;
+            document.getElementById('contador-alunos-card').innerText = contadorAlunos + " Alunos";
+            closeModal('modal-aluno', 'modal-aluno-content');
+        });
+    </script>
+    <script>
+        tailwind.config.theme.extend.keyframes = {
+            fadeIn: {
+                '0%': { opacity: '0', transform: 'translateY(5px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
             }
         }
     </script>
