@@ -1,0 +1,20 @@
+.hidden { display: none !important; }
+
+.btn-3d { transition: all 0.1s ease-in-out; }
+
+.btn-3d:active {
+    transform: translateY(4px);
+    border-bottom-width: 0px !important;
+    margin-top: 4px;
+}
+
+details > summary { list-style: none; }
+
+details > summary::-webkit-details-marker { display: none; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
