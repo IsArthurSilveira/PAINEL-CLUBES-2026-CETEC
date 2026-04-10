@@ -61,7 +61,7 @@
             </div>
             <nav class="flex-1 p-4 space-y-2 mt-2">
                 <button onclick="navigate('view-clubes', this)" class="nav-btn w-full text-left px-5 py-3 rounded-2xl bg-white/10 font-bold hover:bg-white/20 transition flex items-center border-b-4 border-transparent hover:border-white/20 text-sm">
-                    <span class="mr-3 text-lg">🧩</span> Visão Geral
+                    <span class="mr-3 text-lg">🧩</span> Painel de Clubes
                 </button>
             </nav>
             <div class="p-6">
@@ -74,13 +74,17 @@
             <header class="pt-6 pb-4 px-8 shrink-0 flex justify-between items-end">
                 <div>
                     <h2 id="page-title" class="text-2xl font-black text-cetecBlue tracking-tight">Clubes Ativos</h2>
+                    <p id="page-subtitle" class="text-gray-500 font-bold text-xs mt-1">Gerenciamento das turmas de robótica</p>
                 </div>
+                <button id="btn-add-clube" onclick="openClubeModal()" class="btn-3d bg-cetecGreen text-white font-black py-2.5 px-5 rounded-xl border-b-[4px] border-cetecGreenDark hover:bg-[#7ed152] text-xs flex items-center shadow-sm transition">
+                    + Novo Clube
+                </button>
             </header>
 
             <div class="px-8 pb-6 flex-1 flex flex-col min-h-0 overflow-hidden">
                 
                 <div id="view-clubes" class="flex-1 overflow-y-auto no-scrollbar pb-4 pr-2">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5" id="grid-clubes">
                         
                         <div onclick="openClubeDetails('CLUBE UTEC GREGÓRIO 01')" class="bg-white rounded-2xl p-6 border-2 border-gray-100 shadow-sm hover:border-cetecGreen cursor-pointer hover:shadow-md transition-all group flex flex-col justify-between gap-4 min-h-[240px]">
                             <div>
@@ -92,7 +96,7 @@
                                 <span class="text-purple-600 font-extrabold text-sm block truncate">👨‍💻 Estag: Arthur Silveira</span>
                             </div>
                             <div class="flex items-end justify-between mt-auto pt-4 border-t border-gray-50">
-                                <span id="contador-alunos-card" class="text-cetecBlue font-black text-sm">0 Alunos</span>
+                                <span class="text-cetecBlue font-black text-sm">0 Alunos</span>
                                 <span class="bg-blue-100 text-blue-700 font-black text-xs px-3 py-1.5 rounded-lg flex items-center shrink-0 border border-blue-200"><div class="w-2 h-2 bg-blue-500 rounded-full mr-2 animate-pulse"></div> Em andamento</span>
                             </div>
                         </div>
@@ -112,21 +116,6 @@
                             </div>
                         </div>
 
-                        <div onclick="openClubeDetails('CLUBE UTEC COMPAZ 03')" class="bg-white rounded-2xl p-6 border-2 border-gray-100 shadow-sm hover:border-cetecGreen cursor-pointer hover:shadow-md transition-all group flex flex-col justify-between gap-4 min-h-[240px]">
-                            <div>
-                                <h3 class="text-lg font-black text-cetecBlue group-hover:text-cetecGreen transition-colors truncate">UTEC COMPAZ 03</h3>
-                                <span class="bg-indigo-50 text-indigo-700 font-extrabold text-xs px-3 py-1 rounded-lg border border-indigo-100 mt-2 inline-block truncate max-w-full">🏫 E.M. Pedro Augusto</span>
-                            </div>
-                            <div class="mt-1 space-y-2">
-                                <span class="text-gray-600 font-extrabold text-sm block truncate">👩‍🏫 Prof: Ana Paula</span>
-                                <span class="text-purple-600 font-extrabold text-sm block truncate">👨‍💻 Estag: Arthur Silveira</span>
-                            </div>
-                            <div class="flex items-end justify-between mt-auto pt-4 border-t border-gray-50">
-                                <span class="text-cetecBlue font-black text-sm">25 Alunos</span>
-                                <span class="bg-green-100 text-green-700 font-black text-xs px-3 py-1.5 rounded-lg flex items-center shrink-0 border border-green-200"><div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div> Concluído</span>
-                            </div>
-                        </div>
-
                     </div>
                 </div>
 
@@ -139,7 +128,6 @@
                     </div>
 
                     <div class="bg-white rounded-[1.5rem] p-6 border border-gray-100 shadow-sm mb-6 flex flex-wrap justify-between items-center shrink-0 gap-6">
-                        
                         <div class="flex flex-col gap-2 min-w-[200px]">
                             <h3 id="detalhes-titulo" class="text-2xl font-black text-gray-800 tracking-tight">Nome do Clube</h3>
                             <select id="status-clube" onchange="changeClubStatus(this)" class="bg-blue-100 text-blue-700 font-black text-xs px-3 py-1.5 rounded-lg mt-1 border border-blue-200 outline-none cursor-pointer w-fit appearance-none text-center">
@@ -148,19 +136,16 @@
                                 <option value="concluido">🟢 Concluído</option>
                             </select>
                         </div>
-
                         <div class="flex flex-col border-l border-gray-200 pl-6">
                             <span class="text-[10px] font-bold text-gray-400 uppercase mb-1">Localização</span>
                             <span class="text-sm font-black text-gray-800">🏫 E.M. João Cabral</span>
                             <span class="text-xs font-bold text-cetecBlue mt-0.5">UTEC Gregório Bezerra</span>
                         </div>
-
                         <div class="flex flex-col border-l border-gray-200 pl-6">
                             <span class="text-[10px] font-bold text-gray-400 uppercase mb-1">Equipe Responsável</span>
                             <span class="text-sm font-black text-gray-800">👩‍🏫 Profª Maria Silva</span>
                             <span class="text-xs font-bold text-purple-600 mt-0.5">👨‍💻 Arthur Silveira (Estag)</span>
                         </div>
-
                         <div class="flex flex-col border-l border-gray-200 pl-6">
                             <span class="text-[10px] font-bold text-gray-400 uppercase mb-1">Agenda</span>
                             <span class="text-sm font-black text-gray-800">Terças e Quintas</span>
@@ -169,15 +154,13 @@
                     </div>
 
                     <div class="flex flex-col xl:flex-row gap-5 flex-1 min-h-0 overflow-hidden">
-                        
                         <div class="w-full xl:w-[34%] bg-white rounded-[1.5rem] border border-gray-100 p-6 flex flex-col shadow-sm h-[340px] xl:h-full overflow-hidden shrink-0">
                             <div class="flex justify-between items-center mb-5 shrink-0 border-b border-gray-50 pb-4">
                                 <h4 class="font-black text-lg text-gray-800">Alunos</h4>
                                 <button onclick="openAlunoModal()" title="Adicionar aluno" aria-label="Adicionar aluno" class="bg-gray-100 text-cetecBlue hover:bg-blue-50 font-black w-9 h-9 rounded-lg text-xl leading-none transition flex items-center justify-center">+</button>
                             </div>
                             <div class="flex-1 overflow-y-auto no-scrollbar pr-1">
-                                <ul id="lista-alunos-clube" class="space-y-3 font-semibold text-gray-600">
-                                    </ul>
+                                <ul id="lista-alunos-clube" class="space-y-3 font-semibold text-gray-600"></ul>
                             </div>
                         </div>
 
@@ -189,7 +172,6 @@
                              
                              <div class="flex-1 overflow-y-auto no-scrollbar pr-1 pb-4">
                                 <div class="grid grid-cols-1 gap-5">
-                                    
                                     <details class="bg-gray-50 rounded-2xl border border-gray-200 group shadow-sm h-fit" open>
                                         <summary class="font-black text-white bg-[#F3A712] p-3.5 text-sm cursor-pointer hover:opacity-90 transition rounded-t-2xl group-open:rounded-b-none rounded-b-2xl flex justify-between items-center outline-none">
                                             1. SCRATCH
@@ -197,7 +179,6 @@
                                         </summary>
                                         <div id="lista-scratch" class="p-3 border-t-0 space-y-3 rounded-b-2xl flex flex-col"></div>
                                     </details>
-
                                     <details class="bg-gray-50 rounded-2xl border border-gray-200 group shadow-sm h-fit" open>
                                         <summary class="font-black text-white bg-cetecBlue p-3.5 text-sm cursor-pointer hover:opacity-90 transition rounded-t-2xl group-open:rounded-b-none rounded-b-2xl flex justify-between items-center outline-none">
                                             2. EV3
@@ -205,7 +186,6 @@
                                         </summary>
                                         <div id="lista-ev3" class="p-3 border-t-0 space-y-3 rounded-b-2xl flex flex-col"></div>
                                     </details>
-
                                     <details class="bg-gray-50 rounded-2xl border border-gray-200 group shadow-sm h-fit">
                                         <summary class="font-black text-white bg-cetecOrange p-3.5 text-sm cursor-pointer hover:opacity-90 transition rounded-t-2xl group-open:rounded-b-none rounded-b-2xl flex justify-between items-center outline-none">
                                             3. MAKER / ARDUINO
@@ -213,7 +193,6 @@
                                         </summary>
                                         <div id="lista-maker" class="p-3 border-t-0 space-y-3 rounded-b-2xl flex flex-col"></div>
                                     </details>
-
                                     <details class="bg-gray-50 rounded-2xl border border-gray-200 group shadow-sm h-fit">
                                         <summary class="font-black text-white bg-cetecGreen p-3.5 text-sm cursor-pointer hover:opacity-90 transition rounded-t-2xl group-open:rounded-b-none rounded-b-2xl flex justify-between items-center outline-none">
                                             4. PYTHON
@@ -221,15 +200,67 @@
                                         </summary>
                                         <div id="lista-python" class="p-3 border-t-0 space-y-3 rounded-b-2xl flex flex-col"></div>
                                     </details>
-
                                 </div>
                              </div>
                         </div>
-
                     </div>
                 </div>
             </div>
         </main>
+    </div>
+
+    <div id="modal-clube" class="hidden fixed inset-0 bg-cetecBlue/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2rem] w-[550px] max-w-full shadow-2xl flex flex-col border-b-[8px] border-cetecOrange transform scale-95 transition-transform duration-200" id="modal-clube-content">
+            <div class="p-6 pb-3 border-b-2 border-gray-100 flex justify-between items-start">
+                <h3 class="text-xl font-black text-cetecBlue">Adicionar Novo Clube</h3>
+                <button onclick="closeModal('modal-clube', 'modal-clube-content')" class="bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-red-500 w-8 h-8 rounded-full font-bold flex items-center justify-center transition">X</button>
+            </div>
+            <form id="form-clube" class="p-6 space-y-4">
+                
+                <div>
+                    <label class="block text-[10px] font-black text-gray-500 mb-1 uppercase tracking-wider">Nome de Identificação (Ex: UTEC GREGÓRIO 04)</label>
+                    <input type="text" id="input-clube-nome" placeholder="Nome do Clube" class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cetecOrange font-bold text-gray-700 text-xs" required>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 mb-1 uppercase tracking-wider">Escola</label>
+                        <input type="text" id="input-clube-escola" placeholder="Ex: E.M. João Cabral" class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cetecOrange font-bold text-gray-700 text-xs" required>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 mb-1 uppercase tracking-wider">UTEC Ponto de Apoio</label>
+                        <input type="text" id="input-clube-utec" placeholder="Ex: Gregório Bezerra" class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cetecOrange font-bold text-gray-700 text-xs" required>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 mb-1 uppercase tracking-wider">Professor(a)</label>
+                        <input type="text" id="input-clube-prof" placeholder="Ex: Maria Silva" class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cetecOrange font-bold text-gray-700 text-xs" required>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 mb-1 uppercase tracking-wider">Estagiário(a)</label>
+                        <input type="text" id="input-clube-estag" value="Arthur Silveira" class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cetecOrange font-bold text-gray-700 text-xs" required>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 mb-1 uppercase tracking-wider">Dias da Semana</label>
+                        <input type="text" id="input-clube-dias" placeholder="Ex: Terças e Quintas" class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cetecOrange font-bold text-gray-700 text-xs" required>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 mb-1 uppercase tracking-wider">Horário</label>
+                        <input type="text" id="input-clube-horario" placeholder="Ex: 14h às 16h" class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cetecOrange font-bold text-gray-700 text-xs" required>
+                    </div>
+                </div>
+
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="closeModal('modal-clube', 'modal-clube-content')" class="btn-3d w-1/3 bg-gray-200 text-gray-600 font-black py-3 rounded-xl border-b-[4px] border-gray-300 hover:bg-gray-300 text-xs">Cancelar</button>
+                    <button type="submit" class="btn-3d w-2/3 bg-cetecOrange text-white font-black py-3 rounded-xl border-b-[4px] border-[#D65D15] hover:bg-[#ff8438] text-xs">Salvar Clube</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <div id="modal-encontro" class="hidden fixed inset-0 bg-cetecBlue/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -310,8 +341,12 @@
             
             if(viewId === 'view-clubes') {
                 document.getElementById('page-title').innerText = 'Clubes Ativos';
+                document.getElementById('page-subtitle').style.display = 'block';
+                document.getElementById('btn-add-clube').style.display = 'flex';
             } else {
                 document.getElementById('page-title').innerText = 'Painel da Trilha';
+                document.getElementById('page-subtitle').style.display = 'none';
+                document.getElementById('btn-add-clube').style.display = 'none';
             }
         }
 
@@ -322,6 +357,8 @@
             telaDetalhes.classList.remove('hidden');
             telaDetalhes.style.display = 'flex';
             document.getElementById('page-title').innerText = 'Painel da Trilha';
+            document.getElementById('page-subtitle').style.display = 'none';
+            document.getElementById('btn-add-clube').style.display = 'none';
         }
 
         function openModal(modalId, contentId) {
@@ -343,11 +380,13 @@
                 modal.classList.add('hidden');
                 if (modalId === 'modal-encontro') document.getElementById('form-encontro').reset();
                 if (modalId === 'modal-aluno') document.getElementById('form-aluno').reset();
+                if (modalId === 'modal-clube') document.getElementById('form-clube').reset();
             }, 200);
         }
 
         function openEncontroModal() { openModal('modal-encontro', 'modal-encontro-content'); }
         function openAlunoModal() { openModal('modal-aluno', 'modal-aluno-content'); }
+        function openClubeModal() { openModal('modal-clube', 'modal-clube-content'); }
 
         function removerItem(botao) {
             const item = botao.closest('li, .item-encontro');
@@ -370,10 +409,8 @@
 
         function changeClubStatus(selectElement) {
             const valor = selectElement.value;
-            // Remove todas as possíveis cores atuais
             selectElement.classList.remove('bg-blue-100', 'text-blue-700', 'border-blue-200', 'bg-orange-100', 'text-orange-700', 'border-orange-200', 'bg-green-100', 'text-green-700', 'border-green-200');
             
-            // Adiciona as cores certas baseadas na escolha
             if (valor === 'em_andamento') {
                 selectElement.classList.add('bg-blue-100', 'text-blue-700', 'border-blue-200');
             } else if (valor === 'pendente') {
@@ -388,6 +425,43 @@
             const partes = dataISO.split('-');
             return `${partes[2]}/${partes[1]}/${partes[0]}`;
         }
+
+        // --- LÓGICA DE CRIAR NOVO CLUBE ---
+        document.getElementById('form-clube').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Pegando os valores
+            const nome = document.getElementById('input-clube-nome').value;
+            const escola = document.getElementById('input-clube-escola').value;
+            const prof = document.getElementById('input-clube-prof').value;
+            const estag = document.getElementById('input-clube-estag').value;
+
+            // Montando o HTML do Card (Igual aos existentes, mas dinâmico)
+            const cardHTML = `
+                <div onclick="openClubeDetails('${nome}')" class="bg-white rounded-2xl p-6 border-2 border-gray-100 shadow-sm hover:border-cetecGreen cursor-pointer hover:shadow-md transition-all group flex flex-col justify-between gap-4 min-h-[240px] animate-[fadeIn_0.3s_ease-in-out]">
+                    <div>
+                        <h3 class="text-lg font-black text-cetecBlue group-hover:text-cetecGreen transition-colors truncate">${nome}</h3>
+                        <span class="bg-indigo-50 text-indigo-700 font-extrabold text-xs px-3 py-1 rounded-lg border border-indigo-100 mt-2 inline-block truncate max-w-full">🏫 ${escola}</span>
+                    </div>
+                    <div class="mt-1 space-y-2">
+                        <span class="text-gray-600 font-extrabold text-sm block truncate">👩‍🏫 Prof: ${prof}</span>
+                        <span class="text-purple-600 font-extrabold text-sm block truncate">👨‍💻 Estag: ${estag}</span>
+                    </div>
+                    <div class="flex items-end justify-between mt-auto pt-4 border-t border-gray-50">
+                        <span class="text-cetecBlue font-black text-sm">0 Alunos</span>
+                        <span class="bg-orange-100 text-orange-700 font-black text-xs px-3 py-1.5 rounded-lg flex items-center shrink-0 border border-orange-200">
+                            <div class="w-2 h-2 bg-orange-500 rounded-full mr-2"></div> Pendente
+                        </span>
+                    </div>
+                </div>
+            `;
+
+            // Inserindo o card na grid de clubes
+            document.getElementById('grid-clubes').insertAdjacentHTML('beforeend', cardHTML);
+            
+            // Fechando o Modal
+            closeModal('modal-clube', 'modal-clube-content');
+        });
 
         document.getElementById('form-encontro').addEventListener('submit', function(e) {
             e.preventDefault();
