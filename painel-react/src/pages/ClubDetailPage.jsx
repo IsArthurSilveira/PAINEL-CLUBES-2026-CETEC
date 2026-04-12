@@ -194,7 +194,7 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
   }
 
   return (
-    <div id="main-app" className="flex flex-col lg:flex-row min-h-screen w-full overflow-hidden lg:h-screen">
+    <div id="main-app" className="flex flex-col lg:flex-row min-h-screen w-full overflow-x-hidden lg:overflow-hidden lg:h-screen">
       <AppSidebar
         activeView="clubs"
         userName={userName}
@@ -204,11 +204,11 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
         onOpenNewClub={onOpenNewClubModal}
       />
 
-      <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative bg-bgDashboard lg:h-screen">
-        <div className="px-4 sm:px-6 lg:px-8 py-4 lg:py-6 flex-1 flex flex-col min-h-0 overflow-y-auto lg:overflow-hidden">
+      <main className="flex-1 flex flex-col min-h-0 overflow-visible lg:overflow-hidden relative bg-bgDashboard lg:h-screen">
+        <div className="px-4 sm:px-6 lg:px-8 py-4 lg:py-6 flex-1 flex flex-col min-h-0 overflow-visible lg:overflow-hidden">
           {(detailsError || actionError) && <div className="ui-state-panel ui-state-panel--empty text-red-500">{detailsError || actionError}</div>}
 
-          <div className="flex flex-col h-full animate-[fadeIn_0.3s_ease-in-out] overflow-y-auto lg:overflow-hidden">
+          <div className="flex flex-col h-full animate-[fadeIn_0.3s_ease-in-out] overflow-visible lg:overflow-hidden">
             <div className="shrink-0 mb-3 flex justify-end items-center">
               <button
                 onClick={() => navigate(returnTo)}
@@ -253,7 +253,7 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
               </div>
             </div>
 
-            <div className="flex flex-col xl:flex-row gap-5 flex-1 min-h-0 overflow-hidden">
+            <div className="flex flex-col xl:flex-row gap-5 flex-1 min-h-0 overflow-visible xl:overflow-hidden">
               <div className="w-full xl:w-[34%] ui-surface-card ui-surface-card--pad flex flex-col h-[320px] sm:h-[340px] xl:h-full overflow-hidden shrink-0">
                 <div className="ui-section-head shrink-0 border-b border-gray-50 pb-4 mb-5">
                   <h4 className="font-black text-lg text-gray-800">Alunos</h4>

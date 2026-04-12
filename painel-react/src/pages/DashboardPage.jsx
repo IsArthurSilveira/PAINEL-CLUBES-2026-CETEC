@@ -67,7 +67,7 @@ export function DashboardPage({
   }
 
   return (
-    <div id="main-app" className="flex flex-col lg:flex-row min-h-screen w-full overflow-hidden lg:h-screen">
+    <div id="main-app" className="flex flex-col lg:flex-row min-h-screen w-full overflow-x-hidden lg:overflow-hidden lg:h-screen">
       <AppSidebar
         activeView="dashboard"
         userName={userName}
@@ -77,7 +77,7 @@ export function DashboardPage({
         onOpenNewClub={onOpenNewClubModal}
       />
 
-      <main className="dashboard-main-modern flex-1 flex flex-col min-h-0 overflow-hidden relative bg-bgDashboard lg:h-screen">
+      <main className="dashboard-main-modern flex-1 flex flex-col min-h-0 overflow-visible lg:overflow-hidden relative bg-bgDashboard lg:h-screen">
         <div className="dashboard-bg-orb dashboard-bg-orb-a" aria-hidden="true" />
         <div className="dashboard-bg-orb dashboard-bg-orb-b" aria-hidden="true" />
 
@@ -110,7 +110,7 @@ export function DashboardPage({
           </div>
         </header>
 
-        <div className="px-4 sm:px-6 lg:px-8 pb-5 lg:pb-6 flex-1 flex flex-col min-h-0 overflow-y-auto lg:overflow-hidden">
+        <div className="px-4 sm:px-6 lg:px-8 pb-5 lg:pb-6 flex-1 flex flex-col min-h-0 overflow-visible lg:overflow-hidden">
           {loading && <div className="ui-state-panel ui-state-panel--loading">A sincronizar com a base de dados...</div>}
           {error && <div className="ui-state-panel ui-state-panel--empty text-red-500">{error}</div>}
 
