@@ -25,12 +25,9 @@ export function AppSidebar({ activeView, userName, onLogout, onOpenDashboard, on
     return (
       <aside className="app-sidebar-mobile w-full bg-[#03258C] text-white flex flex-col rounded-b-[1.3rem] shadow-xl z-20 border-b-4 border-cetecBlueDark shrink-0">
         <div className="app-sidebar-mobile-top px-4 pt-3 pb-2 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 min-w-0">
-            <img src={iconeEducacode} alt="Icone Educacode" className="w-9 h-9 object-contain shrink-0" />
-            <div className="min-w-0">
-              <p className="app-sidebar-mobile-kicker text-[10px] font-black tracking-[0.14em] text-white/70 uppercase">Painel CETEC</p>
-              <p className="app-sidebar-mobile-user text-xs font-extrabold truncate">{userName}</p>
-            </div>
+          <div className="flex items-center gap-3 min-w-0">
+            <img src={logoEducacode} alt="Logo Educacode" className="w-[122px] h-auto object-contain shrink-0" />
+            <p className="app-sidebar-mobile-user text-xs font-extrabold truncate text-white/90">{userName}</p>
           </div>
           <button
             type="button"
@@ -47,7 +44,7 @@ export function AppSidebar({ activeView, userName, onLogout, onOpenDashboard, on
           <button
             type="button"
             onClick={onOpenDashboard}
-            className={`app-sidebar-mobile-btn nav-btn h-10 px-3 rounded-xl font-bold transition inline-flex items-center gap-1.5 border-b-4 text-xs whitespace-nowrap ${
+            className={`app-sidebar-mobile-btn nav-btn h-11 px-4 rounded-2xl font-bold transition inline-flex items-center gap-1.5 border-b-4 text-sm whitespace-nowrap ${
               activeView === 'dashboard'
                 ? 'bg-white/20 border-white/30'
                 : 'bg-white/10 hover:bg-white/20 border-transparent hover:border-white/20'
@@ -61,7 +58,7 @@ export function AppSidebar({ activeView, userName, onLogout, onOpenDashboard, on
           <button
             type="button"
             onClick={onOpenClubs}
-            className={`app-sidebar-mobile-btn nav-btn h-10 px-3 rounded-xl font-bold transition inline-flex items-center gap-1.5 border-b-4 text-xs whitespace-nowrap ${
+            className={`app-sidebar-mobile-btn nav-btn h-11 px-4 rounded-2xl font-bold transition inline-flex items-center gap-1.5 border-b-4 text-sm whitespace-nowrap ${
               activeView === 'clubs'
                 ? 'bg-white/20 border-white/30'
                 : 'bg-white/10 hover:bg-white/20 border-transparent hover:border-white/20'
@@ -75,7 +72,7 @@ export function AppSidebar({ activeView, userName, onLogout, onOpenDashboard, on
           <button
             type="button"
             onClick={onOpenNewClub}
-            className="app-sidebar-mobile-btn nav-btn h-10 px-3 rounded-xl bg-white/10 font-bold hover:bg-white/20 transition inline-flex items-center gap-1.5 border-b-4 border-transparent hover:border-white/20 text-xs whitespace-nowrap"
+            className="app-sidebar-mobile-btn nav-btn h-11 px-4 rounded-2xl bg-white/10 font-bold hover:bg-white/20 transition inline-flex items-center gap-1.5 border-b-4 border-transparent hover:border-white/20 text-sm whitespace-nowrap"
             title="Novo Clube"
           >
             <span className="material-symbols-rounded text-[18px]">add_circle</span>

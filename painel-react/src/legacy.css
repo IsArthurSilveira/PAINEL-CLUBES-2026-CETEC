@@ -1181,52 +1181,7 @@ details > summary::-webkit-details-marker { display: none; }
     }
 }
 
-@media (max-width: 390px) {
-    .app-sidebar-mobile {
-        border-bottom-width: 3px;
-        border-bottom-left-radius: 1rem;
-        border-bottom-right-radius: 1rem;
-    }
-
-    .app-sidebar-mobile-top {
-        padding-left: 0.75rem;
-        padding-right: 0.75rem;
-        padding-top: 0.62rem;
-        padding-bottom: 0.45rem;
-        gap: 0.45rem;
-    }
-
-    .app-sidebar-mobile-kicker {
-        font-size: 9px;
-        letter-spacing: 0.12em;
-    }
-
-    .app-sidebar-mobile-user {
-        font-size: 11px;
-    }
-
-    .app-sidebar-mobile-logout {
-        width: 2rem;
-        height: 2rem;
-    }
-
-    .app-sidebar-mobile-nav {
-        padding-left: 0.5rem;
-        padding-right: 0.5rem;
-        padding-bottom: 0.5rem;
-        gap: 0.35rem;
-    }
-
-    .app-sidebar-mobile-btn {
-        height: 2.15rem;
-        padding-left: 0.55rem;
-        padding-right: 0.55rem;
-        border-radius: 0.65rem;
-        gap: 0.3rem;
-        border-bottom-width: 3px;
-        font-size: 11px;
-    }
-
+@media (max-width: 420px) {
     .item-encontro {
         flex-direction: column;
         align-items: flex-start;
@@ -1241,37 +1196,6 @@ details > summary::-webkit-details-marker { display: none; }
 
     .status-btn {
         min-width: 58px;
-    }
-}
-
-@media (max-width: 360px) {
-    .app-sidebar-mobile-top {
-        padding-left: 0.58rem;
-        padding-right: 0.58rem;
-    }
-
-    .app-sidebar-mobile-kicker {
-        display: none;
-    }
-
-    .app-sidebar-mobile-btn {
-        height: 2.05rem;
-        padding-left: 0.48rem;
-        padding-right: 0.48rem;
-        font-size: 10px;
-    }
-
-    .dashboard-command-chip {
-        font-size: 0.56rem;
-        letter-spacing: 0.08em;
-    }
-
-    .ui-modal-card {
-        border-radius: 1rem;
-    }
-
-    .ui-modal-body {
-        padding: 0.85rem;
     }
 }
 
