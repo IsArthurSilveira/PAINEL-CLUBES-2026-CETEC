@@ -13,12 +13,19 @@ export function toUpperText(value, fallback = '') {
 }
 
 export function statusKey(status) {
-  return String(status || '').trim().toLowerCase();
+  const normalized = String(status || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+  if (normalized === 'em_andamento' || normalized === 'em_andamento.') return 'em_andamento';
+  if (normalized === 'concluido' || normalized === 'concluído') return 'concluido';
+  return 'pendente';
+}
+
+function normalizeId(value) {
+  return String(value ?? '').trim();
 }
 
 export function normalizeClube(raw) {
   return {
-    id: toUpperText(pickField(raw, ['ID', 'id', 'ID_Clube', 'ID Clube'], ''), ''),
+    id: normalizeId(pickField(raw, ['ID', 'id', 'ID_Clube', 'ID Clube'], '')),
     nome: toUpperText(pickField(raw, ['Nome', 'nome'], '-'), '-'),
     escola: toUpperText(pickField(raw, ['Escola', 'escola'], '-'), '-'),
     utec: toUpperText(pickField(raw, ['UTEC', 'utec'], '-'), '-'),
@@ -33,8 +40,8 @@ export function normalizeClube(raw) {
 
 export function normalizeAluno(raw) {
   return {
-    id: toUpperText(pickField(raw, ['ID_Aluno', 'ID Aluno', 'id', 'ID'], ''), ''),
-    idClube: toUpperText(pickField(raw, ['ID_Clube', 'ID Clube', 'id_clube'], ''), ''),
+    id: normalizeId(pickField(raw, ['ID_Aluno', 'ID Aluno', 'id', 'ID'], '')),
+    idClube: normalizeId(pickField(raw, ['ID_Clube', 'ID Clube', 'id_clube'], '')),
     matricula: toUpperText(pickField(raw, ['Matricula', 'Matrícula', 'matricula'], ''), ''),
     nome: toUpperText(pickField(raw, ['Nome', 'nome'], '-'), '-'),
     dataRegistro: toUpperText(pickField(raw, ['Data_Registro', 'Data Registro', 'data_registro'], ''), ''),
@@ -43,8 +50,8 @@ export function normalizeAluno(raw) {
 
 export function normalizeEncontro(raw) {
   return {
-    id: toUpperText(pickField(raw, ['ID_Encontro', 'ID Encontro', 'id', 'ID'], ''), ''),
-    idClube: toUpperText(pickField(raw, ['ID_Clube', 'ID Clube', 'id_clube'], ''), ''),
+    id: normalizeId(pickField(raw, ['ID_Encontro', 'ID Encontro', 'id', 'ID'], '')),
+    idClube: normalizeId(pickField(raw, ['ID_Clube', 'ID Clube', 'id_clube'], '')),
     modulo: toUpperText(pickField(raw, ['Modulo', 'Módulo', 'modulo', 'Modlulo'], ''), ''),
     assunto: toUpperText(pickField(raw, ['Assunto', 'assunto'], '-'), '-'),
     data: toUpperText(pickField(raw, ['Data', 'data'], ''), ''),

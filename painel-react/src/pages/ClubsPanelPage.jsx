@@ -1,9 +1,28 @@
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppSidebar } from '../components/AppSidebar';
 import { statusKey } from '../utils/clubes';
 
 export function ClubsPanelPage({ userName, onLogout, onOpenNewClubModal, clubes, loading, error }) {
   const navigate = useNavigate();
+  const [search, setSearch] = useState('');
+  const [quickFilter, setQuickFilter] = useState('all');
+  const [searchField, setSearchField] = useState('all');
+
+  const normalizedSearch = search.trim().toLowerCase();
+
+  const filteredClubes = useMemo(() => {
+    return clubes.filter((clube) => {
+      const key = statusKey(clube.status);
+      const categoria = String(clube.categoria || '').toLowerCase();
+      const inQuickFilter = matchQuickFilter(quickFilter, key, categoria);
+      if (!inQuickFilter) return false;
+
+      if (!normalizedSearch) return true;
+
+      return matchSearchField(clube, searchField, normalizedSearch);
+    });
+  }, [clubes, normalizedSearch, quickFilter, searchField]);
 
   return (
     <div id="main-app" className="flex h-screen w-screen overflow-hidden">
@@ -16,25 +35,68 @@ export function ClubsPanelPage({ userName, onLogout, onOpenNewClubModal, clubes,
         onOpenNewClub={onOpenNewClubModal}
       />
 
-      <main className="flex-1 flex flex-col h-screen overflow-hidden relative bg-bgDashboard">
-        <header className="pt-6 pb-4 px-8 shrink-0 flex justify-between items-end">
-          <div>
-            <h2 className="text-2xl font-black text-cetecBlue tracking-tight">Painel de Clubes</h2>
-            <p className="text-gray-500 font-bold text-xs mt-1">Gestão completa dos clubes cadastrados</p>
+      <main className="dashboard-main-modern flex-1 flex flex-col h-screen overflow-hidden relative bg-bgDashboard">
+        <div className="dashboard-bg-orb dashboard-bg-orb-a" aria-hidden="true" />
+        <div className="dashboard-bg-orb dashboard-bg-orb-b" aria-hidden="true" />
+
+        <header className="dashboard-header-modern pt-6 pb-4 px-8 shrink-0">
+          <div className="flex justify-between items-end gap-3 flex-wrap">
+            <div>
+              <h2 className="text-3xl font-black text-cetecBlue tracking-tight">Painel de Clubes</h2>
+              <p className="text-gray-500 font-bold text-xs mt-1">Gestão completa dos clubes cadastrados com busca ativa e filtros rápidos</p>
+            </div>
+            <button type="button" onClick={onOpenNewClubModal} className="btn-3d bg-cetecGreen text-white font-black py-2.5 px-5 rounded-xl border-b-[4px] border-cetecGreenDark hover:bg-[#7ed152] text-xs items-center shadow-sm transition">
+              + Novo Clube
+            </button>
           </div>
-          <button type="button" onClick={onOpenNewClubModal} className="btn-3d bg-cetecGreen text-white font-black py-2.5 px-5 rounded-xl border-b-[4px] border-cetecGreenDark hover:bg-[#7ed152] text-xs items-center shadow-sm transition">
-            + Novo Clube
-          </button>
+
+          <div className="clubes-toolbar-row mt-4">
+            <div className="dashboard-search-pill clubes-search-inline">
+              <span className="material-symbols-rounded text-[16px]">search</span>
+              <select
+                value={searchField}
+                onChange={(event) => setSearchField(event.target.value)}
+                className="clubes-search-select"
+                aria-label="Campo de pesquisa"
+              >
+                <option value="all">Todos os campos</option>
+                <option value="nome">Nome do clube</option>
+                <option value="escola">Escola</option>
+                <option value="estag">Estagiário</option>
+                <option value="prof">Professor</option>
+              </select>
+              <input
+                type="text"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder={searchPlaceholder(searchField)}
+                aria-label="Pesquisar clubes"
+              />
+            </div>
+
+            <div className="dashboard-filter-bar clubes-filter-inline">
+              <FilterChip label="Todos" icon="dashboard" active={quickFilter === 'all'} onClick={() => setQuickFilter('all')} />
+              <FilterChip label="Pendentes" icon="hourglass_top" active={quickFilter === 'pendente'} onClick={() => setQuickFilter('pendente')} />
+              <FilterChip label="Andamento" icon="progress_activity" active={quickFilter === 'em_andamento'} onClick={() => setQuickFilter('em_andamento')} />
+              <FilterChip label="Concluídos" icon="task_alt" active={quickFilter === 'concluido'} onClick={() => setQuickFilter('concluido')} />
+              <FilterChip label="Iniciais" icon="school" active={quickFilter === 'iniciais'} onClick={() => setQuickFilter('iniciais')} />
+              <FilterChip label="Mistos" icon="groups" active={quickFilter === 'mistos'} onClick={() => setQuickFilter('mistos')} />
+              <FilterChip label="Finais" icon="category" active={quickFilter === 'finais'} onClick={() => setQuickFilter('finais')} />
+            </div>
+          </div>
         </header>
 
-        <div className="px-8 pb-6 flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className="px-8 pb-6 flex-1 flex flex-col min-h-0 overflow-hidden relative z-[2]">
           {loading && <div className="ui-state-panel ui-state-panel--loading">A sincronizar com a base de dados...</div>}
           {error && <div className="ui-state-panel ui-state-panel--empty text-red-500">{error}</div>}
 
           {!loading && !error && (
             <div className="flex-1 overflow-y-auto no-scrollbar pb-4 pr-2">
+              {filteredClubes.length === 0 && (
+                <div className="ui-state-panel ui-state-panel--empty mb-4">Nenhum clube encontrado para os filtros aplicados.</div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-5 ui-card-grid ui-card-grid--three" id="grid-clubes-react">
-                {clubes.map((clube) => (
+                {filteredClubes.map((clube) => (
                   <button
                     key={clube.id}
                     type="button"
@@ -70,6 +132,47 @@ export function ClubsPanelPage({ userName, onLogout, onOpenNewClubModal, clubes,
   );
 }
 
+function FilterChip({ label, icon, active, onClick }) {
+  return (
+    <button type="button" className={`dashboard-filter-chip ${active ? 'is-active' : ''}`} onClick={onClick}>
+      <span className="material-symbols-rounded">{icon}</span>
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function searchPlaceholder(field) {
+  if (field === 'nome') return 'Pesquisar por nome do clube';
+  if (field === 'escola') return 'Pesquisar por escola';
+  if (field === 'estag') return 'Pesquisar por estagiário';
+  if (field === 'prof') return 'Pesquisar por professor';
+  return 'Pesquisar clube, escola, estagiário ou professor';
+}
+
+function matchQuickFilter(filter, status, categoria) {
+  if (filter === 'pendente' || filter === 'em_andamento' || filter === 'concluido') {
+    return status === filter;
+  }
+  if (filter === 'iniciais') return categoria.includes('iniciais');
+  if (filter === 'mistos') return categoria.includes('mistos');
+  if (filter === 'finais') return categoria.includes('finais');
+  return true;
+}
+
+function matchSearchField(clube, field, search) {
+  const nome = String(clube.nome || '').toLowerCase();
+  const escola = String(clube.escola || '').toLowerCase();
+  const estag = String(clube.estag || '').toLowerCase();
+  const prof = String(clube.prof || '').toLowerCase();
+
+  if (field === 'nome') return nome.includes(search);
+  if (field === 'escola') return escola.includes(search);
+  if (field === 'estag') return estag.includes(search);
+  if (field === 'prof') return prof.includes(search);
+
+  return [nome, escola, estag, prof].join(' ').includes(search);
+}
+
 function normalizeCategoriaLabel(categoria) {
   const current = String(categoria || '').toLowerCase();
   if (current.includes('mist')) return 'Clubes Mistos';
@@ -79,7 +182,7 @@ function normalizeCategoriaLabel(categoria) {
 
 function categoriaClass(categoria) {
   const current = String(categoria || '').toLowerCase();
-  if (current.includes('mist')) return 'bg-violet-100 text-violet-700 border-violet-200';
+  if (current.includes('mist')) return 'bg-blue-100 text-blue-700 border-blue-200';
   if (current.includes('fina')) return 'bg-green-100 text-green-700 border-green-200';
   return 'bg-sky-100 text-sky-700 border-sky-200';
 }
@@ -88,7 +191,7 @@ function statusClass(status) {
   const key = statusKey(status);
   if (key === 'concluido') return 'bg-green-100 text-green-700 border-green-200';
   if (key === 'em_andamento') return 'bg-blue-100 text-blue-700 border-blue-200';
-  return 'bg-orange-100 text-orange-700 border-orange-200';
+  return 'bg-cyan-100 text-cyan-700 border-cyan-200';
 }
 
 function statusText(status) {

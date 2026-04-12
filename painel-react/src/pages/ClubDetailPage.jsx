@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AppSidebar } from '../components/AppSidebar';
 import { formatDateBR, statusKey, toUpperText } from '../utils/clubes';
 
-export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes, details, detailsError, onLoadDetails, onRefresh, onSaveAluno, onSaveEncontro, onUpdateStatus }) {
+export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes, details, detailsError, onLoadDetails, onRefresh, onSaveAluno, onDeleteAluno, onSaveEncontro, onDeleteEncontro, onUpdateStatus }) {
   const { clubId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -13,6 +13,8 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
   const [savingStatus, setSavingStatus] = useState(false);
   const [savingAluno, setSavingAluno] = useState(false);
   const [savingEncontro, setSavingEncontro] = useState(false);
+  const [actionError, setActionError] = useState('');
+  const [alunoLoadingMap, setAlunoLoadingMap] = useState({});
   const [encontroLoadingMap, setEncontroLoadingMap] = useState({});
   const [novoAluno, setNovoAluno] = useState({ matricula: '', nome: '' });
   const [novoEncontro, setNovoEncontro] = useState({ modulo: 'lista-scratch', assunto: '', data: '' });
@@ -68,7 +70,7 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
     setStatusValue(nextStatus);
     setSavingStatus(true);
     try {
-      const response = await onUpdateStatus({ acao: 'atualizar_status_clube', id_clube: club.id, status: nextStatus.toUpperCase() });
+      const response = await onUpdateStatus({ acao: 'atualizar_status_clube', id_clube: club.id, status: statusValueToBackend(nextStatus) });
       if (response?.sucesso) await refreshDetails();
       else setStatusValue(statusKey(club.status) || 'pendente');
     } catch {
@@ -132,6 +134,65 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
     }
   }
 
+  async function removeEncontro(encontro) {
+    const encontroKey = encontro?.id || `${encontro?.modulo || ''}-${encontro?.assunto || ''}-${encontro?.data || ''}`;
+    if (!encontroKey) return;
+
+    setEncontroLoadingMap((curr) => ({ ...curr, [encontroKey]: true }));
+    try {
+      setActionError('');
+      let response = await onDeleteEncontro({ acao: 'remover_encontro', id_encontro: encontro?.id || '' });
+      if (!isSuccessResponse(response)) {
+        response = await onDeleteEncontro({ acao: 'excluir_encontro', id_encontro: encontro?.id || '' });
+      }
+
+      if (isSuccessResponse(response)) {
+        await refreshDetails();
+      } else {
+        setActionError(getErrorMessage(response, 'Não foi possível remover o encontro.'));
+      }
+    } catch {
+      setActionError('Não foi possível remover o encontro.');
+    } finally {
+      setEncontroLoadingMap((curr) => ({ ...curr, [encontroKey]: false }));
+    }
+  }
+
+  async function removeAluno(aluno) {
+    if (!aluno) return;
+
+    const alunoKey = aluno.id || `${aluno?.matricula || ''}-${aluno?.nome || ''}`;
+    if (!alunoKey) return;
+
+    setAlunoLoadingMap((curr) => ({ ...curr, [alunoKey]: true }));
+    try {
+      setActionError('');
+      const basePayload = {
+        id_aluno: aluno?.id || '',
+        idAluno: aluno?.id || '',
+        id: aluno?.id || '',
+        id_clube: club.id,
+        matricula: aluno?.matricula || '',
+        nome: aluno?.nome || '',
+      };
+
+      let response = await onDeleteAluno({ acao: 'remover_aluno', ...basePayload });
+      if (!isSuccessResponse(response)) {
+        response = await onDeleteAluno({ acao: 'excluir_aluno', ...basePayload });
+      }
+
+      if (isSuccessResponse(response)) {
+        await refreshDetails();
+      } else {
+        setActionError(getErrorMessage(response, 'Não foi possível remover o aluno.'));
+      }
+    } catch {
+      setActionError('Não foi possível remover o aluno.');
+    } finally {
+      setAlunoLoadingMap((curr) => ({ ...curr, [alunoKey]: false }));
+    }
+  }
+
   return (
     <div id="main-app" className="flex h-screen w-screen overflow-hidden">
       <AppSidebar
@@ -145,7 +206,7 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
 
       <main className="flex-1 flex flex-col h-screen overflow-hidden relative bg-bgDashboard">
         <div className="px-8 py-6 flex-1 flex flex-col min-h-0 overflow-hidden">
-          {detailsError && <div className="ui-state-panel ui-state-panel--empty text-red-500">{detailsError}</div>}
+          {(detailsError || actionError) && <div className="ui-state-panel ui-state-panel--empty text-red-500">{detailsError || actionError}</div>}
 
           <div className="flex flex-col h-full animate-[fadeIn_0.3s_ease-in-out] overflow-hidden">
             <div className="shrink-0 mb-3 flex justify-end items-center">
@@ -203,7 +264,7 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
                   <ul className="space-y-3 font-semibold text-gray-600">
                     {alunos.map((aluno) => (
                       <li key={aluno.id || `${aluno.nome}-${aluno.matricula}`} className="ui-card-tile ui-card-tile--row group animate-[fadeIn_0.3s_ease-in-out]">
-                        <div className="flex items-center w-full">
+                        <div className="flex items-center w-full gap-2">
                           <div className="w-9 h-9 bg-blue-50 text-cetecBlue rounded-full flex items-center justify-center mr-3 shrink-0">
                             <span className="material-symbols-rounded text-[18px]">person</span>
                           </div>
@@ -211,6 +272,14 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
                             <span className="block text-gray-800 font-black leading-tight text-sm truncate">{aluno.nome}</span>
                             <span className="block text-xs font-bold text-gray-400 truncate mt-0.5">MAT: {aluno.matricula || 'S/ MATRÍCULA'}</span>
                           </div>
+                          <button
+                            type="button"
+                            onClick={() => removeAluno(aluno)}
+                            disabled={Boolean(alunoLoadingMap?.[aluno.id || `${aluno?.matricula || ''}-${aluno?.nome || ''}`])}
+                            className={`btn-3d font-black text-[10px] px-2.5 py-1.5 rounded-md border-b-[3px] transition-colors min-w-[74px] shrink-0 ${Boolean(alunoLoadingMap?.[aluno.id || `${aluno?.matricula || ''}-${aluno?.nome || ''}`]) ? 'bg-gray-400 text-white border-gray-600 cursor-wait' : 'bg-gray-700 text-white border-gray-900 hover:bg-gray-800'}`}
+                          >
+                            {Boolean(alunoLoadingMap?.[aluno.id || `${aluno?.matricula || ''}-${aluno?.nome || ''}`]) ? '...' : 'REMOVER'}
+                          </button>
                         </div>
                       </li>
                     ))}
@@ -226,10 +295,10 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
 
                 <div className="flex-1 overflow-y-auto no-scrollbar pr-1 pb-4">
                   <div className="ui-card-grid ui-card-grid--single" style={{ gap: '1.25rem' }}>
-                    <ModuloSection title="1. SCRATCH" colorClass="bg-[#F3A712]" encontros={encontrosPorModulo['lista-scratch']} onToggleStatus={toggleEncontroStatus} encontroLoadingMap={encontroLoadingMap} />
-                    <ModuloSection title="2. EV3" colorClass="bg-cetecBlue" encontros={encontrosPorModulo['lista-ev3']} onToggleStatus={toggleEncontroStatus} encontroLoadingMap={encontroLoadingMap} />
-                    <ModuloSection title="3. MAKER / ARDUINO" colorClass="bg-cetecOrange" encontros={encontrosPorModulo['lista-maker']} onToggleStatus={toggleEncontroStatus} encontroLoadingMap={encontroLoadingMap} />
-                    <ModuloSection title="4. PYTHON" colorClass="bg-cetecGreen" encontros={encontrosPorModulo['lista-python']} onToggleStatus={toggleEncontroStatus} encontroLoadingMap={encontroLoadingMap} />
+                    <ModuloSection title="1. SCRATCH" colorClass="bg-[#F3A712]" encontros={encontrosPorModulo['lista-scratch']} onToggleStatus={toggleEncontroStatus} onRemoveEncontro={removeEncontro} encontroLoadingMap={encontroLoadingMap} />
+                    <ModuloSection title="2. EV3" colorClass="bg-cetecBlue" encontros={encontrosPorModulo['lista-ev3']} onToggleStatus={toggleEncontroStatus} onRemoveEncontro={removeEncontro} encontroLoadingMap={encontroLoadingMap} />
+                    <ModuloSection title="3. MAKER / ARDUINO" colorClass="bg-cetecOrange" encontros={encontrosPorModulo['lista-maker']} onToggleStatus={toggleEncontroStatus} onRemoveEncontro={removeEncontro} encontroLoadingMap={encontroLoadingMap} />
+                    <ModuloSection title="4. PYTHON" colorClass="bg-cetecGreen" encontros={encontrosPorModulo['lista-python']} onToggleStatus={toggleEncontroStatus} onRemoveEncontro={removeEncontro} encontroLoadingMap={encontroLoadingMap} />
                   </div>
                 </div>
               </div>
@@ -294,7 +363,7 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
   );
 }
 
-function ModuloSection({ title, colorClass, encontros, onToggleStatus, encontroLoadingMap }) {
+function ModuloSection({ title, colorClass, encontros, onToggleStatus, onRemoveEncontro, encontroLoadingMap }) {
   return (
     <details className="ui-surface-card group shadow-sm h-fit">
       <summary className={`font-black text-white p-3.5 text-sm cursor-pointer hover:opacity-90 transition rounded-t-2xl group-open:rounded-b-none rounded-b-2xl flex justify-between items-center outline-none ${colorClass}`}>
@@ -321,12 +390,26 @@ function ModuloSection({ title, colorClass, encontros, onToggleStatus, encontroL
               >
                 {Boolean(encontroLoadingMap?.[enc.id]) ? '...' : String(enc.status || '').toUpperCase() === 'FEITO' ? 'FEITO' : 'A FAZER'}
               </button>
+              <button
+                type="button"
+                onClick={() => onRemoveEncontro(enc)}
+                disabled={Boolean(encontroLoadingMap?.[enc.id])}
+                className={`btn-3d font-black text-[10px] px-2.5 py-1.5 rounded-md border-b-[3px] transition-colors min-w-[64px] ${Boolean(encontroLoadingMap?.[enc.id]) ? 'bg-gray-400 text-white border-gray-600 cursor-wait' : 'bg-gray-700 text-white border-gray-900 hover:bg-gray-800'}`}
+              >
+                REMOVER
+              </button>
             </div>
           </div>
         ))}
       </div>
     </details>
   );
+}
+
+function statusValueToBackend(statusValue) {
+  if (statusValue === 'concluido') return 'CONCLUIDO';
+  if (statusValue === 'em_andamento') return 'EM ANDAMENTO';
+  return 'PENDENTE';
 }
 
 function mapModulo(rawModulo) {
@@ -348,7 +431,7 @@ function normalizeCategoriaLabel(categoria) {
 
 function categoriaBadgeClass(categoria) {
   const current = String(categoria || '').toLowerCase();
-  if (current.includes('mist')) return 'bg-violet-100 text-violet-700 border-violet-200';
+  if (current.includes('mist')) return 'bg-blue-100 text-blue-700 border-blue-200';
   if (current.includes('fina')) return 'bg-green-100 text-green-700 border-green-200';
   return 'bg-sky-100 text-sky-700 border-sky-200';
 }
@@ -360,5 +443,21 @@ function statusSelectClass(status, disabled) {
 
   if (status === 'concluido') return `bg-green-100 text-green-700 border-green-200 ${base}`;
   if (status === 'em_andamento') return `bg-blue-100 text-blue-700 border-blue-200 ${base}`;
-  return `bg-orange-100 text-orange-700 border-orange-200 ${base}`;
+  return `bg-cyan-100 text-cyan-700 border-cyan-200 ${base}`;
+}
+
+function isSuccessResponse(response) {
+  if (!response) return false;
+  if (response === true) return true;
+  return response.sucesso === true || response.SUCESSO === true;
+}
+
+function getErrorMessage(response, fallback) {
+  if (!response || typeof response !== 'object') return fallback;
+  const code = String(response.codigo || '').toUpperCase();
+  if (code === 'ACAO_INVALIDA') {
+    return 'Ação inválida no backend. Verifique se o frontend está apontando para o deployment mais recente do Apps Script.';
+  }
+
+  return response.erro || response.mensagem || response.message || fallback;
 }

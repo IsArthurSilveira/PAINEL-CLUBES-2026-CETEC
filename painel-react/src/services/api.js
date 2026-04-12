@@ -62,7 +62,7 @@ export async function apiGet(params) {
   const url = `${API_URL}?${new URLSearchParams(requestParams).toString()}`;
   const response = await fetch(url);
   const result = transformSheetResponse(await response.json(), requestParams?.acao);
-  assertAuthorized(result);
+  assertAuthorized(result, requestParams?.token);
   return result;
 }
 
@@ -83,7 +83,7 @@ export async function apiPost(payload) {
   });
 
   const result = transformApiResponse(await response.json(), action);
-  assertAuthorized(result);
+  assertAuthorized(result, requestPayload?.token);
   return result;
 }
 
@@ -91,27 +91,34 @@ function jsonpRequest(params) {
   return new Promise((resolve, reject) => {
     const initialAction = String(params?.acao || '').toLowerCase();
     const requestParams = transformSheetRequest(appendAuthToken(params, initialAction));
+    const requestToken = requestParams?.token;
     const action = String(requestParams?.acao || '').toLowerCase();
     const callbackName = `jsonp_cb_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
     const query = new URLSearchParams({ ...requestParams, callback: callbackName }).toString();
     const script = document.createElement('script');
+    let settled = false;
 
     const timeout = setTimeout(() => {
-      cleanup();
+      settled = true;
+      // Mantém callback no-op para respostas tardias não gerarem ReferenceError no console.
+      window[callbackName] = () => {};
+      if (script.parentNode) script.parentNode.removeChild(script);
       reject(new Error('Tempo de resposta excedido no JSONP.'));
-    }, 10000);
+    }, 30000);
 
-    function cleanup() {
+    function cleanupSuccess() {
       clearTimeout(timeout);
       delete window[callbackName];
       if (script.parentNode) script.parentNode.removeChild(script);
     }
 
     window[callbackName] = (data) => {
-      cleanup();
+      if (settled) return;
+      settled = true;
+      cleanupSuccess();
       try {
         const result = transformApiResponse(data, action);
-        assertAuthorized(result);
+        assertAuthorized(result, requestToken);
         resolve(result);
       } catch (err) {
         reject(err);
@@ -119,7 +126,11 @@ function jsonpRequest(params) {
     };
 
     script.onerror = () => {
-      cleanup();
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      window[callbackName] = () => {};
+      if (script.parentNode) script.parentNode.removeChild(script);
       reject(new Error('Falha no carregamento JSONP.'));
     };
 
@@ -131,7 +142,7 @@ function jsonpRequest(params) {
 function transformSheetRequest(value) {
   return transformDeep(value, (key, currentValue) => {
     if (typeof currentValue !== 'string') return currentValue;
-    if (key === 'acao' || key === 'callback' || key === 'token') return currentValue;
+    if (key === 'acao' || key === 'callback' || key === 'token' || isIdField(key)) return currentValue;
     return currentValue.toUpperCase();
   });
 }
@@ -142,6 +153,7 @@ function transformSheetResponse(value, action = '') {
 
   return transformDeep(value, (_, currentValue) => {
     if (typeof currentValue !== 'string') return currentValue;
+    if (isIdField(_)) return currentValue;
     return currentValue.toUpperCase();
   });
 }
@@ -157,6 +169,11 @@ function transformApiResponse(value, action = '') {
   }
 
   return transformSheetResponse(value, action);
+}
+
+function isIdField(key) {
+  const normalized = String(key || '').toLowerCase();
+  return normalized === 'id' || normalized.startsWith('id_') || normalized === 'idclube' || normalized === 'idencontro' || normalized === 'idaluno';
 }
 
 function transformDeep(value, transformFn, key = '') {
@@ -184,7 +201,7 @@ function appendAuthToken(payload, action) {
   return { ...payload, token };
 }
 
-function assertAuthorized(response) {
+function assertAuthorized(response, requestToken = '') {
   if (!response || typeof response !== 'object') return;
 
   const code = String(response.codigo || response.erro || '').toUpperCase();
@@ -197,6 +214,13 @@ function assertAuthorized(response) {
     message.includes('token') && message.includes('inval');
 
   if (!unauthorized) return;
+
+  // Resposta atrasada de uma requisição antiga (token diferente) não deve derrubar sessão atual.
+  const currentToken = getSessionToken();
+  const reqToken = String(requestToken || '').trim();
+  if (reqToken && currentToken && reqToken !== currentToken) {
+    return;
+  }
 
   clearSessionToken();
   if (typeof window !== 'undefined') {

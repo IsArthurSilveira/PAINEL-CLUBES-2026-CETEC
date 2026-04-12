@@ -1,187 +1,351 @@
 import {
   ArcElement,
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
   BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Filler,
   Legend,
+  LineElement,
+  LinearScale,
+  PointElement,
   Tooltip,
 } from 'chart.js';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import { statusKey } from '../utils/clubes';
 
-ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, Tooltip, Legend);
+ChartJS.register(
+  ArcElement,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  Filler,
+  Tooltip,
+  Legend,
+);
 
-const FILTERS = {
-  all: (c) => c,
-  pendente: (c) => statusKey(c.status) === 'pendente',
-  em_andamento: (c) => statusKey(c.status) === 'em_andamento',
-  concluido: (c) => statusKey(c.status) === 'concluido',
-  iniciais: (c) => c.categoria.toLowerCase().includes('iniciais'),
-  mistos: (c) => c.categoria.toLowerCase().includes('mistos'),
-  finais: (c) => c.categoria.toLowerCase().includes('finais'),
-};
+const ENCONTROS_META_PADRAO = 16;
+const STATIC_GENDER_DISTRIBUTION = [52, 48];
+const CHART_ANIMATION = { duration: 850, easing: 'easeOutQuart' };
 
-export function DashboardView({ clubes, statusFilter, setStatusFilter, onSelectClub }) {
-  const filteredClubes = clubes.filter(FILTERS[statusFilter] || FILTERS.all);
-
-  const byCategoria = buildCategoria(filteredClubes);
-  const byUtec = buildUtec(filteredClubes);
+export function DashboardView({ clubes }) {
+  const analytics = buildAnalytics(clubes, clubes);
+  const byCategoria = buildCategoria(clubes);
+  const byStatus = buildStatusDistribuicao(clubes);
+  const byUtec = buildUtec(clubes);
+  const progressoEncontros = buildProgressoEncontros(clubes);
+  const topAlunos = buildTopClubesPorAlunos(clubes);
 
   const kpis = {
     totalClubes: clubes.length,
     totalAlunos: clubes.reduce((sum, c) => sum + (c.alunos || 0), 0),
-    pendentes: clubes.filter((c) => statusKey(c.status) === 'pendente').length,
-    andamento: clubes.filter((c) => statusKey(c.status) === 'em_andamento').length,
-    concluidos: clubes.filter((c) => statusKey(c.status) === 'concluido').length,
+    totalEscolas: analytics.totalEscolas,
+    conclusaoMedia: `${analytics.percentualMedioConclusao}%`,
   };
+
+  const categoriaLabels = ['Iniciais', 'Mistos', 'Finais'];
+  const categoriaValues = [byCategoria.iniciais, byCategoria.mistos, byCategoria.finais];
+  const categoriaColors = ['#8B5CF6', '#4ECBD9', '#67BF4E'];
+  const categoriaLegend = buildLegendData(categoriaLabels, categoriaValues, categoriaColors);
+
+  const statusColors = ['#06B6D4', '#2563EB', '#22C55E'];
+  const statusLegend = buildLegendData(byStatus.labels, byStatus.values, statusColors);
+
+  const genderLabels = ['Meninos', 'Meninas'];
+  const genderColors = ['#8B5CF6', '#4ECBD9'];
+  const genderLegend = buildLegendData(genderLabels, analytics.generoData, genderColors);
+  const genderRingData = genderLegend.map((item, index) => ({
+    label: item.label,
+    value: item.percentual,
+    count: sanitizeNumber(analytics.generoData[index]),
+    color: genderColors[index],
+    rotation: [0, 10][index] ?? -90,
+  }));
 
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar pb-4 pr-2">
-      <section className="dashboard-shell space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+      <section className="bi-dashboard">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
           <Kpi title="Total de clubes" value={kpis.totalClubes} icon="dashboard" iconClass="dashboard-kpi-icon-blue" />
           <Kpi title="Total de alunos" value={kpis.totalAlunos} icon="groups" iconClass="dashboard-kpi-icon-indigo" />
-          <Kpi title="Pendentes" value={kpis.pendentes} icon="hourglass_top" iconClass="dashboard-kpi-icon-orange" />
-          <Kpi title="Em andamento" value={kpis.andamento} icon="progress_activity" iconClass="dashboard-kpi-icon-blue-soft" />
-          <Kpi title="Concluídos" value={kpis.concluidos} icon="task_alt" iconClass="dashboard-kpi-icon-green" />
+          <Kpi title="Escolas cadastradas" value={kpis.totalEscolas} icon="apartment" iconClass="dashboard-kpi-icon-blue-soft" />
+          <Kpi title="Conclusão média (16 encontros)" value={kpis.conclusaoMedia} icon="monitoring" iconClass="dashboard-kpi-icon-green" />
         </div>
 
-        <div className="dashboard-filter-row ui-surface-card ui-surface-card--pad">
-          <div>
-            <p className="dashboard-panel-kicker">Filtros rápidos</p>
-            <h4 className="dashboard-panel-title">Refinar a visão</h4>
-            <p className="dashboard-filter-note">Mostrando {filteredClubes.length} de {clubes.length} clubes no filtro atual.</p>
-          </div>
-          <div className="dashboard-filter-bar">
-            <FilterChip label="Todos" active={statusFilter === 'all'} onClick={() => setStatusFilter('all')} icon="dashboard" />
-            <FilterChip label="Pendentes" active={statusFilter === 'pendente'} onClick={() => setStatusFilter('pendente')} icon="hourglass_top" />
-            <FilterChip label="Andamento" active={statusFilter === 'em_andamento'} onClick={() => setStatusFilter('em_andamento')} icon="progress_activity" />
-            <FilterChip label="Concluídos" active={statusFilter === 'concluido'} onClick={() => setStatusFilter('concluido')} icon="task_alt" />
-            <FilterChip label="Iniciais" active={statusFilter === 'iniciais'} onClick={() => setStatusFilter('iniciais')} icon="school" />
-            <FilterChip label="Mistos" active={statusFilter === 'mistos'} onClick={() => setStatusFilter('mistos')} icon="groups" />
-            <FilterChip label="Finais" active={statusFilter === 'finais'} onClick={() => setStatusFilter('finais')} icon="category" />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
-          <section className="dashboard-panel ui-surface-card ui-surface-card--pad">
-            <div className="dashboard-panel-head ui-section-head">
-              <div>
-                <p className="dashboard-panel-kicker ui-section-kicker">Estrutura da base</p>
-                <h4 className="dashboard-panel-title ui-section-title">Clubes por categoria</h4>
+        <div className="bi-grid-top">
+          <article className="bi-card bi-card-lg bi-ring-card">
+            <h4 className="bi-title">Tipo de clubes</h4>
+            <div className="bi-ring-content">
+              <div className="bi-ring-legend">
+                {categoriaLegend.map((item) => (
+                  <div key={item.label} className="bi-ring-legend-row">
+                    <span className="bi-ring-dot" style={{ backgroundColor: item.color }} />
+                    <span className="bi-ring-label">{item.label}</span>
+                    <span className="bi-ring-value">{item.percentual}%</span>
+                  </div>
+                ))}
               </div>
-              <span className="dashboard-panel-badge ui-section-badge">Leitura geral</span>
-            </div>
-            <div className="dashboard-chart-wrap">
+              <div className="bi-chart-lg bi-ring-chart">
               <Doughnut
                 data={{
-                  labels: ['Iniciais', 'Mistos', 'Finais'],
+                  labels: categoriaLabels,
                   datasets: [{
-                    data: [byCategoria.iniciais, byCategoria.mistos, byCategoria.finais],
-                    backgroundColor: ['rgba(73,132,255,0.35)', 'rgba(118,92,196,0.35)', 'rgba(110,190,68,0.35)'],
-                    borderColor: ['rgba(73,132,255,0.8)', 'rgba(118,92,196,0.8)', 'rgba(110,190,68,0.8)'],
-                    borderWidth: 1,
+                    data: categoriaValues,
+                    backgroundColor: categoriaColors,
+                    borderColor: 'transparent',
+                    borderWidth: 0,
+                    spacing: 2,
+                    hoverOffset: 2,
                   }],
                 }}
                 options={{
                   maintainAspectRatio: false,
-                  cutout: '68%',
+                  animation: CHART_ANIMATION,
+                  cutout: '76%',
+                  radius: '88%',
+                  rotation: -90,
                   plugins: {
-                    legend: {
-                      position: 'bottom',
-                      labels: {
-                        color: '#475569',
-                        usePointStyle: true,
-                        pointStyle: 'circle',
-                        padding: 16,
-                        boxWidth: 10,
-                        boxHeight: 10,
-                        font: { size: 11, weight: '600' },
+                    legend: { display: false },
+                    tooltip: {
+                      enabled: true,
+                      callbacks: {
+                        title: (items) => {
+                          const index = items?.[0]?.dataIndex ?? 0;
+                          return categoriaLabels[index] || 'Tipo de clubes';
+                        },
+                        label: (item) => ` ${item.parsed} clubes`,
                       },
                     },
                   },
                 }}
               />
-            </div>
-          </section>
-
-          <section className="dashboard-panel ui-surface-card ui-surface-card--pad">
-            <div className="dashboard-panel-head ui-section-head">
-              <div>
-                <p className="dashboard-panel-kicker ui-section-kicker">Distribuição territorial</p>
-                <h4 className="dashboard-panel-title ui-section-title">Clubes por UTEC</h4>
               </div>
-              <span className="dashboard-panel-badge ui-section-badge">Resumo</span>
             </div>
-            <div className="dashboard-chart-wrap dashboard-chart-wrap-small">
+          </article>
+
+          <article className="bi-card bi-card-lg bi-ring-card">
+            <h4 className="bi-title">Status dos clubes</h4>
+            <div className="bi-ring-content">
+              <div className="bi-ring-legend">
+                {statusLegend.map((item) => (
+                  <div key={item.label} className="bi-ring-legend-row">
+                    <span className="bi-ring-dot" style={{ backgroundColor: item.color }} />
+                    <span className="bi-ring-label">{item.label}</span>
+                    <span className="bi-ring-value">{item.percentual}%</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="bi-chart-lg bi-ring-chart">
+                <Doughnut
+                  data={{
+                    labels: byStatus.labels,
+                    datasets: [{
+                      data: byStatus.values,
+                      backgroundColor: statusColors,
+                      borderColor: 'transparent',
+                      borderWidth: 0,
+                      spacing: 0,
+                      hoverOffset: 4,
+                    }],
+                  }}
+                  options={{
+                    maintainAspectRatio: false,
+                    animation: CHART_ANIMATION,
+                    cutout: '76%',
+                    radius: '88%',
+                    rotation: -90,
+                    interaction: {
+                      mode: 'nearest',
+                      intersect: false,
+                    },
+                    plugins: {
+                      legend: { display: false },
+                      tooltip: {
+                        enabled: true,
+                        mode: 'nearest',
+                        intersect: false,
+                        callbacks: {
+                          title: (items) => {
+                            const index = items?.[0]?.dataIndex ?? 0;
+                            return byStatus.labels[index] || 'Status';
+                          },
+                          label: (item) => ` ${item.parsed} clubes`,
+                        },
+                      },
+                    },
+                  }}
+                />
+              </div>
+            </div>
+          </article>
+
+          <article className="bi-card bi-card-lg bi-ring-card">
+            <h4 className="bi-title">Gênero dos alunos</h4>
+            <div className="bi-ring-content bi-ring-content--stacked">
+              <div className="bi-ring-legend">
+                {genderLegend.map((item) => (
+                  <div key={item.label} className="bi-ring-legend-row">
+                    <span className="bi-ring-dot" style={{ backgroundColor: item.color }} />
+                    <span className="bi-ring-label">{item.label}</span>
+                    <span className="bi-ring-value">{item.percentual}%</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="bi-gender-rings" aria-label="Gráfico de gênero dos alunos">
+                <Doughnut
+                  data={{
+                    labels: genderLabels,
+                    datasets: genderRingData.map((item) => ({
+                      label: item.label,
+                      data: [item.value, Math.max(0, 100 - item.value)],
+                      backgroundColor: [item.color, '#e8edf7'],
+                      borderColor: '#f8fbff',
+                      borderWidth: 4,
+                      spacing: 2,
+                      hoverOffset: 0,
+                      rotation: item.rotation,
+                      circumference: 360,
+                      weight: 1,
+                    })),
+                  }}
+                  options={{
+                    maintainAspectRatio: false,
+                    animation: CHART_ANIMATION,
+                    cutout: '64%',
+                    radius: '88%',
+                    plugins: {
+                      legend: { display: false },
+                      tooltip: {
+                        filter: (tooltipItem) => tooltipItem.dataIndex === 0,
+                        callbacks: {
+                          title: (items) => {
+                            const datasetLabel = items?.[0]?.dataset?.label;
+                            return datasetLabel || 'Gênero';
+                          },
+                          label: (tooltipItem) => {
+                            const ring = genderRingData[tooltipItem.datasetIndex];
+                            return ` ${ring?.count ?? 0} alunos`;
+                          },
+                        },
+                      },
+                    },
+                  }}
+                />
+              </div>
+            </div>
+          </article>
+
+          <article className="bi-card bi-card-lg bi-card-list bi-card-tall">
+            <h4 className="bi-title">Top clubes 3 clubes com mais alunos</h4>
+            <div className="bi-list bi-list-tall">
+              {topAlunos.items.map((item) => (
+                <div key={item.nome} className="bi-list-row">
+                  <div className="bi-list-avatar">{item.nome.slice(0, 1)}</div>
+                  <div className="bi-list-meta">
+                    <p className="bi-list-name">{item.nome}</p>
+                    <p className="bi-list-sub">{item.escola}</p>
+                  </div>
+                  <div className="bi-list-value">{item.alunos}</div>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="bi-card bi-card-lg bi-utec-fill-card">
+            <h4 className="bi-title">Clubes por UTEC</h4>
+            <div className="bi-chart-lg">
               <Bar
                 data={{
                   labels: byUtec.labels,
                   datasets: [{
-                    label: 'Clubes',
                     data: byUtec.values,
-                    backgroundColor: 'rgba(73,132,255,0.72)',
-                    borderColor: 'rgba(73,132,255,1)',
-                    borderWidth: 1,
-                    borderRadius: 10,
-                    maxBarThickness: 42,
+                    backgroundColor: 'rgba(78,203,217,0.82)',
+                    borderRadius: 8,
+                    maxBarThickness: 24,
                   }],
                 }}
                 options={{
                   maintainAspectRatio: false,
+                  animation: CHART_ANIMATION,
+                  plugins: { legend: { display: false } },
+                  scales: {
+                    x: {
+                      grid: { display: false },
+                      ticks: {
+                        color: '#6b7280',
+                        font: { size: 10, weight: '700' },
+                        autoSkip: false,
+                        maxRotation: 0,
+                        minRotation: 0,
+                        padding: 6,
+                      },
+                    },
+                    y: {
+                      beginAtZero: true,
+                      grid: { color: 'rgba(148,163,184,0.18)' },
+                      ticks: { color: '#6b7280', font: { size: 10, weight: '700' }, precision: 0 },
+                    },
+                  },
+                }}
+              />
+            </div>
+          </article>
+
+          <article className="bi-card bi-card-lg bi-escolas-utec-fill-card">
+            <h4 className="bi-title">Progresso dos encontros</h4>
+            <div className="bi-chart-lg">
+              <Bar
+                data={{
+                  labels: progressoEncontros.labels,
+                  datasets: [{
+                    label: 'Clubes',
+                    data: progressoEncontros.values,
+                    backgroundColor: [
+                      'rgba(148,163,184,0.72)',
+                      'rgba(139,92,246,0.76)',
+                      'rgba(78,203,217,0.78)',
+                      'rgba(103,191,78,0.76)',
+                    ],
+                    borderRadius: 8,
+                    maxBarThickness: 22,
+                  }],
+                }}
+                options={{
+                  maintainAspectRatio: false,
+                  animation: CHART_ANIMATION,
                   plugins: {
                     legend: { display: false },
                     tooltip: {
                       callbacks: {
-                        title: (items) => items[0]?.label || '',
+                        title: (items) => {
+                          const idx = items?.[0]?.dataIndex ?? 0;
+                          return progressoEncontros.labels[idx] || '';
+                        },
                         label: (item) => ` ${item.parsed.y} clubes`,
                       },
                     },
                   },
                   scales: {
                     x: {
-                      grid: { display: false },
-                      ticks: {
-                        color: '#475569',
-                        font: { size: 11, weight: '600' },
-                        maxRotation: 30,
-                        minRotation: 0,
-                        autoSkip: false,
-                      },
+                      beginAtZero: true,
+                      grid: { color: 'rgba(148,163,184,0.2)' },
+                      ticks: { color: '#6b7280', font: { size: 10, weight: '700' }, maxRotation: 0, autoSkip: false },
                     },
                     y: {
                       beginAtZero: true,
-                      ticks: { precision: 0, color: '#475569', font: { size: 11, weight: '600' } },
-                      grid: { color: 'rgba(148,163,184,0.16)' },
+                      grid: { color: 'rgba(148,163,184,0.2)' },
+                      ticks: { color: '#6b7280', font: { size: 10, weight: '700' }, precision: 0 },
                     },
                   },
                 }}
               />
             </div>
-          </section>
+          </article>
         </div>
 
-        <section className="dashboard-panel dashboard-club-list-panel ui-surface-card ui-surface-card--pad">
-          <div className="dashboard-panel-head ui-section-head">
-            <div>
-              <p className="dashboard-panel-kicker ui-section-kicker">Seleção ativa</p>
-              <h4 className="dashboard-panel-title ui-section-title">Clubes filtrados</h4>
-            </div>
-            <span className="dashboard-panel-badge ui-section-badge">{filterLabel(statusFilter)}</span>
-          </div>
-
-          <div className="dashboard-list-grid dashboard-list-grid-two dashboard-list-scroll dashboard-list-scroll-tall ui-card-grid ui-card-grid--two ui-card-grid--scroll ui-card-grid--tall">
-            {filteredClubes.length === 0 && <div className="dashboard-empty-state ui-state-panel ui-state-panel--empty">Nenhum clube encontrado para este filtro.</div>}
-            {filteredClubes.map((clube) => (
-              <button className="dashboard-club-card ui-card-tile ui-card-tile--clickable" key={clube.id} type="button" onClick={() => onSelectClub(clube)}>
-                <span className="dashboard-club-card-title ui-card-title">{clube.nome}</span>
-                <span className="dashboard-club-card-meta ui-card-meta">{clube.escola}</span>
-                <span className={`dashboard-club-card-status ui-card-pill ${statusClass(clube.status)}`}>{labelStatus(clube.status)}</span>
-              </button>
-            ))}
-          </div>
-        </section>
       </section>
     </div>
   );
@@ -189,7 +353,7 @@ export function DashboardView({ clubes, statusFilter, setStatusFilter, onSelectC
 
 function Kpi({ title, value, icon, iconClass }) {
   return (
-    <article className="dashboard-kpi-card ui-surface-card">
+    <article className="dashboard-kpi-card dashboard-kpi-card--compact ui-surface-card">
       <div className={`dashboard-kpi-icon ${iconClass}`}>
         <span className="material-symbols-rounded">{icon}</span>
       </div>
@@ -201,36 +365,10 @@ function Kpi({ title, value, icon, iconClass }) {
   );
 }
 
-function FilterChip({ label, active, onClick, icon }) {
-  return (
-    <button type="button" className={`dashboard-filter-chip ${active ? 'is-active' : ''}`} onClick={onClick}>
-      <span className="material-symbols-rounded">{icon}</span>
-      <span>{label}</span>
-    </button>
-  );
-}
-
-function statusClass(status) {
-  const key = statusKey(status);
-  if (key === 'concluido') return 'bg-green-100 text-green-700 border border-green-200';
-  if (key === 'em_andamento') return 'bg-blue-100 text-blue-700 border border-blue-200';
-  return 'bg-orange-100 text-orange-700 border border-orange-200';
-}
-
-function filterLabel(key) {
-  if (key === 'pendente') return 'Pendentes';
-  if (key === 'em_andamento') return 'Em andamento';
-  if (key === 'concluido') return 'Concluídos';
-  if (key === 'iniciais') return 'Clubes iniciais';
-  if (key === 'mistos') return 'Clubes mistos';
-  if (key === 'finais') return 'Clubes finais';
-  return 'Todos os clubes';
-}
-
 function buildCategoria(clubes) {
   return clubes.reduce(
     (acc, clube) => {
-      const cat = clube.categoria.toLowerCase();
+      const cat = String(clube.categoria || '').toLowerCase();
       if (cat.includes('iniciais')) acc.iniciais += 1;
       else if (cat.includes('mistos')) acc.mistos += 1;
       else acc.finais += 1;
@@ -256,8 +394,115 @@ function buildUtec(clubes) {
   }
 
   return {
-    labels: topItems.map(([label]) => label),
+    labels: topItems.map(([label]) => stripUtecPrefix(label)),
     values: topItems.map(([, value]) => value),
+  };
+}
+
+function buildEscolasPorUtec(clubes) {
+  const map = clubes.reduce((acc, clube) => {
+    const utec = normalizeUtecKey(clube.utec);
+    const escola = normalizeEscolaKey(clube.escola);
+    if (!acc[utec]) acc[utec] = new Set();
+    acc[utec].add(escola);
+    return acc;
+  }, {});
+
+  const ordered = Object.entries(map)
+    .map(([utec, escolas]) => [utec, escolas.size])
+    .sort((a, b) => b[1] - a[1]);
+
+  return {
+    labels: ordered.length ? ordered.map(([utec]) => stripUtecPrefix(utec)) : ['Sem dados'],
+    values: ordered.length ? ordered.map(([, total]) => total) : [0],
+  };
+}
+
+function buildProgressoEncontros(clubes) {
+  const faixas = [
+    { label: '0 encontros', min: 0, max: 0 },
+    { label: '1-5 encontros', min: 1, max: 5 },
+    { label: '6-10 encontros', min: 6, max: 10 },
+    { label: '11+ encontros', min: 11, max: Infinity },
+  ];
+
+  const counts = faixas.map((faixa) =>
+    clubes.filter((clube) => {
+      const encontros = sanitizeNumber(clube.encontrosFeitos);
+      return encontros >= faixa.min && encontros <= faixa.max;
+    }).length,
+  );
+
+  return {
+    labels: faixas.map((faixa) => faixa.label),
+    values: counts,
+  };
+}
+
+function buildStatusDistribuicao(clubes) {
+  const base = { pendente: 0, em_andamento: 0, concluido: 0 };
+  for (const clube of clubes) {
+    const key = statusKey(clube.status);
+    if (base[key] !== undefined) base[key] += 1;
+  }
+
+  return {
+    labels: ['Pendente', 'Em andamento', 'Concluído'],
+    values: [base.pendente, base.em_andamento, base.concluido],
+  };
+}
+
+function buildTopClubesPorAlunos(clubes) {
+  const ordered = [...clubes]
+    .map((clube) => ({
+      nome: clube.nome || 'Clube',
+      escola: normalizeEscolaKey(clube.escola),
+      alunos: sanitizeNumber(clube.alunos),
+    }))
+    .sort((a, b) => b.alunos - a.alunos)
+    .slice(0, 3);
+
+  return {
+    items: ordered,
+  };
+}
+
+function buildAnalytics(clubesFiltrados, todosClubes) {
+  const totalEscolas = countUniqueEscolas(todosClubes);
+  const totalClubesFiltrados = clubesFiltrados.length;
+  const totalMetaGeral = totalClubesFiltrados * ENCONTROS_META_PADRAO;
+
+  const totalEncontrosFeitos = clubesFiltrados.reduce((sum, clube) => sum + sanitizeNumber(clube.encontrosFeitos), 0);
+  const percentualGlobalExecucao = totalMetaGeral ? Math.round((totalEncontrosFeitos / totalMetaGeral) * 100) : 0;
+
+  const clubesIniciados = clubesFiltrados.filter((clube) => sanitizeNumber(clube.encontrosFeitos) > 0).length;
+  const clubesNaoIniciados = Math.max(totalClubesFiltrados - clubesIniciados, 0);
+
+  const percentualMedioConclusao = totalClubesFiltrados
+    ? Math.round(clubesFiltrados.reduce((sum, clube) => sum + computePercentualConclusao(clube), 0) / totalClubesFiltrados)
+    : 0;
+
+  const generoAcumulado = clubesFiltrados.reduce(
+    (acc, clube) => {
+      acc.masculino += sanitizeNumber(clube.generoMasculino);
+      acc.feminino += sanitizeNumber(clube.generoFeminino);
+      acc.naoInformado += sanitizeNumber(clube.generoNaoInformado);
+      return acc;
+    },
+    { masculino: 0, feminino: 0, naoInformado: 0 },
+  );
+
+  const possuiGeneroReal = generoAcumulado.masculino + generoAcumulado.feminino + generoAcumulado.naoInformado > 0;
+
+  return {
+    totalEscolas,
+    percentualGlobalExecucao,
+    clubesIniciados,
+    clubesNaoIniciados,
+    percentualMedioConclusao,
+    generoData: possuiGeneroReal
+      ? [generoAcumulado.masculino, generoAcumulado.feminino, generoAcumulado.naoInformado]
+      : STATIC_GENDER_DISTRIBUTION,
   };
 }
 
@@ -267,9 +512,55 @@ function normalizeUtecKey(value) {
   return text;
 }
 
-function labelStatus(status) {
-  if (status === 'concluido') return 'Concluído';
-  if (status === 'em_andamento') return 'Em andamento';
-  return 'Pendente';
+function stripUtecPrefix(value) {
+  return String(value || '')
+    .replace(/^UTEC\s*/i, '')
+    .trim() || 'Sem UTEC';
 }
 
+function normalizeEscolaKey(value) {
+  const text = String(value || '').trim();
+  if (!text || text === '-') return 'Sem Escola';
+  return text;
+}
+
+function countUniqueEscolas(clubes) {
+  return new Set(clubes.map((clube) => normalizeEscolaKey(clube.escola))).size;
+}
+
+function sanitizeNumber(value) {
+  const parsed = Number(value);
+  if (Number.isNaN(parsed)) return 0;
+  return parsed;
+}
+
+function computePercentualConclusao(clube) {
+  if (clube?.percentualConclusao !== undefined && clube?.percentualConclusao !== null) {
+    const fromPercent = sanitizeNumber(clube.percentualConclusao);
+    return Math.max(0, Math.min(100, Math.round(fromPercent)));
+  }
+
+  const encontrosFeitos = sanitizeNumber(clube?.encontrosFeitos);
+  return Math.max(0, Math.min(100, Math.round((encontrosFeitos / ENCONTROS_META_PADRAO) * 100)));
+}
+
+function shortLabel(value, max = 16) {
+  const text = String(value || '').trim();
+  if (!text) return '-';
+  if (text.length <= max) return text;
+  return `${text.slice(0, max - 3)}...`;
+}
+
+function buildLegendData(labels, values, colors) {
+  const total = values.reduce((acc, item) => acc + sanitizeNumber(item), 0);
+  return labels.map((label, index) => {
+    const value = sanitizeNumber(values[index]);
+    const percentual = total ? Math.round((value / total) * 100) : 0;
+    return {
+      label,
+      value,
+      percentual,
+      color: colors[index] || '#94a3b8',
+    };
+  });
+}

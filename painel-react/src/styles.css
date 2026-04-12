@@ -5,10 +5,12 @@
   --border: rgba(148, 163, 184, 0.2);
   --text: #0f172a;
   --muted: #64748b;
-  --brand: #011e62;
-  --brand-soft: rgba(1, 30, 98, 0.09);
-  --orange: #f37021;
-  --green: #6ebe44;
+  --brand: #03258c;
+  --brand-soft: rgba(3, 37, 140, 0.1);
+  --accent-purple: #2f6fae;
+  --accent-cyan: #4ecbd9;
+  --orange: #4ecbd9;
+  --green: #67bf4e;
   --radius-lg: 18px;
   --radius-md: 14px;
   --shadow: 0 12px 28px rgba(15, 23, 42, 0.06);

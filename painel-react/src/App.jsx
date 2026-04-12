@@ -20,7 +20,6 @@ function App() {
 function AppRoutes() {
   const [userName, setUserName] = useState(localStorage.getItem('usuarioLogado') || '');
   const [sessionChecked, setSessionChecked] = useState(false);
-  const [statusFilter, setStatusFilter] = useState('all');
   const [newClubModalOpen, setNewClubModalOpen] = useState(false);
   const [newClubSaving, setNewClubSaving] = useState(false);
   const {
@@ -34,7 +33,9 @@ function AppRoutes() {
     loadClubDetails,
     saveClub,
     saveAluno,
+    deleteAluno,
     saveEncontro,
+    deleteEncontro,
     updateStatus,
   } = useClubes();
   const navigate = useNavigate();
@@ -143,8 +144,6 @@ function AppRoutes() {
               clubes={clubes}
               loading={loading}
               error={error}
-              statusFilter={statusFilter}
-              setStatusFilter={setStatusFilter}
             />
           )}
         />
@@ -185,7 +184,9 @@ function AppRoutes() {
               onLoadDetails={loadClubDetails}
               onRefresh={loadClubes}
               onSaveAluno={saveAluno}
+              onDeleteAluno={deleteAluno}
               onSaveEncontro={saveEncontro}
+              onDeleteEncontro={deleteEncontro}
               onUpdateStatus={updateStatus}
             />
           )}

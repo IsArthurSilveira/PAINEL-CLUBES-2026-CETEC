@@ -18,24 +18,26 @@ export function useClubes() {
       const clubesRaw = await apiGet({ acao: 'listar_clubes', _t: Date.now() });
       const clubesNorm = Array.isArray(clubesRaw) ? clubesRaw.map(normalizeClube) : [];
 
-      const alunosPorClube = await Promise.all(
+      const clubesComAlunos = await Promise.all(
         clubesNorm.map(async (clube) => {
-          if (!clube.id) return { id: clube.id, total: 0 };
+          if (!clube?.id) return { ...clube, alunos: 0 };
+
           try {
-            const alunos = await apiGet({ acao: 'listar_alunos', id_clube: clube.id, _t: Date.now() });
-            return { id: clube.id, total: Array.isArray(alunos) ? alunos.length : 0 };
+            const alunosRaw = await apiGet({ acao: 'listar_alunos', id_clube: clube.id, _t: Date.now() });
+            return {
+              ...clube,
+              alunos: extractRows(alunosRaw).length,
+            };
           } catch {
-            return { id: clube.id, total: 0 };
+            return {
+              ...clube,
+              alunos: 0,
+            };
           }
         }),
       );
 
-      const alunosMap = alunosPorClube.reduce((acc, item) => {
-        acc[item.id] = item.total;
-        return acc;
-      }, {});
-
-      setClubes(clubesNorm.map((clube) => ({ ...clube, alunos: alunosMap[clube.id] || 0 })));
+      setClubes(clubesComAlunos);
     } catch (err) {
       console.error(err);
       setError('Erro ao carregar os clubes.');
@@ -77,7 +79,9 @@ export function useClubes() {
   }, []);
 
   const saveAluno = useCallback(async (payload) => apiPost(payload), []);
+  const deleteAluno = useCallback(async (payload) => apiPost(payload), []);
   const saveEncontro = useCallback(async (payload) => apiPost(payload), []);
+  const deleteEncontro = useCallback(async (payload) => apiPost(payload), []);
   const updateStatus = useCallback(async (payload) => apiPost(payload), []);
 
   return {
@@ -91,7 +95,18 @@ export function useClubes() {
     loadClubDetails,
     saveClub,
     saveAluno,
+    deleteAluno,
     saveEncontro,
+    deleteEncontro,
     updateStatus,
   };
+}
+
+function extractRows(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.dados)) return payload.dados;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.rows)) return payload.rows;
+  if (Array.isArray(payload?.itens)) return payload.itens;
+  return [];
 }
