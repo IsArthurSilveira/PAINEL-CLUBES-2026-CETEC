@@ -1,73 +1,154 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import iconeEducacode from '../assets/icone.ico';
 import logoEducacode from '../assets/logo-educacode.png';
 
 export function AppSidebar({ activeView, userName, onLogout, onOpenDashboard, onOpenClubs, onOpenNewClub }) {
   const [expanded, setExpanded] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
+
+  useEffect(() => {
+    function handleResize() {
+      setIsMobile(window.innerWidth < 1024);
+    }
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (isMobile) setExpanded(true);
+  }, [isMobile]);
+
+  const expandedDesktop = !isMobile && expanded;
+
+  if (isMobile) {
+    return (
+      <aside className="app-sidebar-mobile w-full bg-[#03258C] text-white flex flex-col rounded-b-[1.3rem] shadow-xl z-20 border-b-4 border-cetecBlueDark shrink-0">
+        <div className="app-sidebar-mobile-top px-4 pt-3 pb-2 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <img src={iconeEducacode} alt="Icone Educacode" className="w-9 h-9 object-contain shrink-0" />
+            <div className="min-w-0">
+              <p className="app-sidebar-mobile-kicker text-[10px] font-black tracking-[0.14em] text-white/70 uppercase">Painel CETEC</p>
+              <p className="app-sidebar-mobile-user text-xs font-extrabold truncate">{userName}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onLogout}
+            className="app-sidebar-mobile-logout h-9 w-9 rounded-lg bg-red-500/25 text-red-100 hover:bg-red-500 hover:text-white transition inline-flex items-center justify-center"
+            title={`Sair do sistema (${userName})`}
+            aria-label="Sair do sistema"
+          >
+            <span className="material-symbols-rounded text-[18px]">logout</span>
+          </button>
+        </div>
+
+        <nav className="app-sidebar-mobile-nav px-3 pb-3 pt-1 flex items-center gap-2 overflow-x-auto no-scrollbar">
+          <button
+            type="button"
+            onClick={onOpenDashboard}
+            className={`app-sidebar-mobile-btn nav-btn h-10 px-3 rounded-xl font-bold transition inline-flex items-center gap-1.5 border-b-4 text-xs whitespace-nowrap ${
+              activeView === 'dashboard'
+                ? 'bg-white/20 border-white/30'
+                : 'bg-white/10 hover:bg-white/20 border-transparent hover:border-white/20'
+            }`}
+            title="Visão Geral"
+          >
+            <span className="material-symbols-rounded text-[18px]">dashboard</span>
+            <span>Visão Geral</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onOpenClubs}
+            className={`app-sidebar-mobile-btn nav-btn h-10 px-3 rounded-xl font-bold transition inline-flex items-center gap-1.5 border-b-4 text-xs whitespace-nowrap ${
+              activeView === 'clubs'
+                ? 'bg-white/20 border-white/30'
+                : 'bg-white/10 hover:bg-white/20 border-transparent hover:border-white/20'
+            }`}
+            title="Painel de Clubes"
+          >
+            <span className="material-symbols-rounded text-[18px]">groups</span>
+            <span>Painel de Clubes</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onOpenNewClub}
+            className="app-sidebar-mobile-btn nav-btn h-10 px-3 rounded-xl bg-white/10 font-bold hover:bg-white/20 transition inline-flex items-center gap-1.5 border-b-4 border-transparent hover:border-white/20 text-xs whitespace-nowrap"
+            title="Novo Clube"
+          >
+            <span className="material-symbols-rounded text-[18px]">add_circle</span>
+            <span>Novo Clube</span>
+          </button>
+        </nav>
+      </aside>
+    );
+  }
 
   return (
     <aside
-      className={`${expanded ? 'w-64' : 'w-[92px]'} bg-[#03258C] text-white flex flex-col rounded-r-[2rem] shadow-xl z-20 border-r-4 border-cetecBlueDark shrink-0 transition-all duration-300 ease-in-out`}
+      className={`${expandedDesktop ? 'w-64' : 'w-[92px]'} bg-[#03258C] text-white flex flex-col rounded-r-[2rem] shadow-xl z-20 border-r-4 border-cetecBlueDark shrink-0 transition-all duration-300 ease-in-out`}
       onMouseEnter={() => setExpanded(true)}
       onMouseLeave={() => setExpanded(false)}
     >
-      <div className={`${expanded ? 'pt-5 pb-2' : 'pt-5 pb-2'} transition-all duration-300`}>
-        {!expanded && <img src={iconeEducacode} alt="Icone Educacode" className="w-12 h-12 mx-auto object-contain" />}
-        {expanded && (
+      <div className={`${expandedDesktop ? 'pt-5 pb-2' : 'pt-5 pb-2'} transition-all duration-300`}>
+        {!expandedDesktop && <img src={iconeEducacode} alt="Icone Educacode" className="w-12 h-12 mx-auto object-contain" />}
+        {expandedDesktop && (
           <img src={logoEducacode} alt="Logo Educacode" className="w-[160px] h-auto mx-auto object-contain" />
         )}
       </div>
 
-      <nav className={`${expanded ? 'p-4' : 'p-3'} flex-1 space-y-2 mt-0 transition-all duration-300`}>
+      <nav className={`${expandedDesktop ? 'p-4' : 'p-3'} flex-1 space-y-2 mt-0 transition-all duration-300`}>
         <button
           type="button"
           onClick={onOpenDashboard}
-          className={`nav-btn ${expanded ? 'w-full justify-start px-5 py-3 rounded-2xl' : 'w-12 h-12 mx-auto justify-center rounded-xl'} font-bold transition flex items-center border-b-4 text-sm ${
+          className={`nav-btn ${expandedDesktop ? 'w-full justify-start px-5 py-3 rounded-2xl' : 'w-12 h-12 mx-auto justify-center rounded-xl'} font-bold transition flex items-center border-b-4 text-sm ${
             activeView === 'dashboard'
               ? 'bg-white/20 border-white/30'
               : 'bg-white/10 hover:bg-white/20 border-transparent hover:border-white/20'
           }`}
           title="Visão Geral"
         >
-          <span className={`material-symbols-rounded text-[20px] ${expanded ? 'mr-3' : ''}`}>dashboard</span>
-          {expanded && <span className="whitespace-nowrap">Visão Geral</span>}
+          <span className={`material-symbols-rounded text-[20px] ${expandedDesktop ? 'mr-3' : ''}`}>dashboard</span>
+          {expandedDesktop && <span className="whitespace-nowrap">Visão Geral</span>}
         </button>
 
         <button
           type="button"
           onClick={onOpenClubs}
-          className={`nav-btn ${expanded ? 'w-full justify-start px-5 py-3 rounded-2xl' : 'w-12 h-12 mx-auto justify-center rounded-xl'} font-bold transition flex items-center border-b-4 text-sm ${
+          className={`nav-btn ${expandedDesktop ? 'w-full justify-start px-5 py-3 rounded-2xl' : 'w-12 h-12 mx-auto justify-center rounded-xl'} font-bold transition flex items-center border-b-4 text-sm ${
             activeView === 'clubs'
               ? 'bg-white/20 border-white/30'
               : 'bg-white/10 hover:bg-white/20 border-transparent hover:border-white/20'
           }`}
           title="Painel de Clubes"
         >
-          <span className={`material-symbols-rounded text-[20px] ${expanded ? 'mr-3' : ''}`}>groups</span>
-          {expanded && <span className="whitespace-nowrap">Painel de Clubes</span>}
+          <span className={`material-symbols-rounded text-[20px] ${expandedDesktop ? 'mr-3' : ''}`}>groups</span>
+          {expandedDesktop && <span className="whitespace-nowrap">Painel de Clubes</span>}
         </button>
 
         <button
           type="button"
           onClick={onOpenNewClub}
-          className={`nav-btn ${expanded ? 'w-full justify-start px-5 py-3 rounded-2xl' : 'w-12 h-12 mx-auto justify-center rounded-xl'} bg-white/10 font-bold hover:bg-white/20 transition flex items-center border-b-4 border-transparent hover:border-white/20 text-sm`}
+          className={`nav-btn ${expandedDesktop ? 'w-full justify-start px-5 py-3 rounded-2xl' : 'w-12 h-12 mx-auto justify-center rounded-xl'} bg-white/10 font-bold hover:bg-white/20 transition flex items-center border-b-4 border-transparent hover:border-white/20 text-sm`}
           title="Novo Clube"
         >
-          <span className={`material-symbols-rounded text-[20px] ${expanded ? 'mr-3' : ''}`}>add_circle</span>
-          {expanded && <span className="whitespace-nowrap">Novo Clube</span>}
+          <span className={`material-symbols-rounded text-[20px] ${expandedDesktop ? 'mr-3' : ''}`}>add_circle</span>
+          {expandedDesktop && <span className="whitespace-nowrap">Novo Clube</span>}
         </button>
       </nav>
 
-      <div className={`${expanded ? 'p-6' : 'p-3'} space-y-2 text-xs text-white/75 font-bold transition-all duration-300`}>
-        {expanded && <p className="text-left">Usuário: {userName}</p>}
+      <div className={`${expandedDesktop ? 'p-6' : 'p-3'} space-y-2 text-xs text-white/75 font-bold transition-all duration-300`}>
+        {expandedDesktop && <p className="text-left">Usuário: {userName}</p>}
         <button
           type="button"
           onClick={onLogout}
-          className={`${expanded ? 'w-full px-4 py-3 rounded-xl' : 'w-12 h-12 mx-auto rounded-xl'} text-center bg-red-500/20 text-red-200 font-bold hover:bg-red-500 hover:text-white transition text-sm inline-flex items-center justify-center gap-2`}
+          className={`${expandedDesktop ? 'w-full px-4 py-3 rounded-xl' : 'w-12 h-12 mx-auto rounded-xl'} text-center bg-red-500/20 text-red-200 font-bold hover:bg-red-500 hover:text-white transition text-sm inline-flex items-center justify-center gap-2`}
           title={`Sair do sistema (${userName})`}
         >
           <span className="material-symbols-rounded text-[18px]">logout</span>
-          {expanded && <span className="whitespace-nowrap">Sair do Sistema</span>}
+          {expandedDesktop && <span className="whitespace-nowrap">Sair do Sistema</span>}
         </button>
       </div>
     </aside>

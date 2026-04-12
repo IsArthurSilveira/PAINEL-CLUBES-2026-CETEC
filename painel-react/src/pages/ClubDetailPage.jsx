@@ -194,7 +194,7 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
   }
 
   return (
-    <div id="main-app" className="flex h-screen w-screen overflow-hidden">
+    <div id="main-app" className="flex flex-col lg:flex-row min-h-screen w-full overflow-hidden lg:h-screen">
       <AppSidebar
         activeView="clubs"
         userName={userName}
@@ -204,15 +204,15 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
         onOpenNewClub={onOpenNewClubModal}
       />
 
-      <main className="flex-1 flex flex-col h-screen overflow-hidden relative bg-bgDashboard">
-        <div className="px-8 py-6 flex-1 flex flex-col min-h-0 overflow-hidden">
+      <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative bg-bgDashboard lg:h-screen">
+        <div className="px-4 sm:px-6 lg:px-8 py-4 lg:py-6 flex-1 flex flex-col min-h-0 overflow-y-auto lg:overflow-hidden">
           {(detailsError || actionError) && <div className="ui-state-panel ui-state-panel--empty text-red-500">{detailsError || actionError}</div>}
 
-          <div className="flex flex-col h-full animate-[fadeIn_0.3s_ease-in-out] overflow-hidden">
+          <div className="flex flex-col h-full animate-[fadeIn_0.3s_ease-in-out] overflow-y-auto lg:overflow-hidden">
             <div className="shrink-0 mb-3 flex justify-end items-center">
               <button
                 onClick={() => navigate(returnTo)}
-                className="w-10 h-10 rounded-full bg-red-100 text-red-600 border-2 border-red-200 hover:bg-red-500 hover:text-white hover:border-red-500 transition shadow-sm font-black text-lg leading-none flex items-center justify-center"
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-red-100 text-red-600 border-2 border-red-200 hover:bg-red-500 hover:text-white hover:border-red-500 transition shadow-sm font-black text-base sm:text-lg leading-none flex items-center justify-center"
                 type="button"
                 aria-label="Fechar detalhes e voltar"
                 title="Fechar"
@@ -221,10 +221,10 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
               </button>
             </div>
 
-            <div className="ui-surface-card ui-surface-card--pad-lg mb-6 shrink-0">
+            <div className="ui-surface-card ui-surface-card--pad-lg mb-4 lg:mb-6 shrink-0">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 <div className="flex flex-col gap-2 min-w-0 lg:col-span-4">
-                <h3 className="text-2xl font-black text-gray-800 tracking-tight">{club.nome}</h3>
+                <h3 className="text-xl sm:text-2xl font-black text-gray-800 tracking-tight break-words">{club.nome}</h3>
                 <select value={statusValue} disabled={savingStatus} onChange={(event) => handleUpdateClubStatus(event.target.value)} className={statusSelectClass(statusValue, savingStatus)}>
                   <option value="pendente">🟠 PENDENTE</option>
                   <option value="em_andamento">🔵 EM ANDAMENTO</option>
@@ -233,18 +233,18 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
                 <span className={`font-extrabold text-xs px-3 py-1 rounded-lg border w-fit ${categoriaBadgeClass(club.categoria)}`}>{normalizeCategoriaLabel(club.categoria)}</span>
               </div>
 
-                <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                  <div className="flex flex-col border-l border-gray-200 pl-6 min-w-0">
+                <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-5">
+                  <div className="flex flex-col border-t sm:border-t-0 sm:border-l border-gray-200 pt-3 sm:pt-0 sm:pl-6 min-w-0">
                     <span className="text-[10px] font-bold text-gray-400 uppercase mb-1">Localização</span>
                     <span className="text-sm font-black text-gray-800 break-words">🏫 {club.escola}</span>
                     <span className="text-xs font-bold text-cetecBlue mt-0.5 break-words">{club.utec}</span>
                   </div>
-                  <div className="flex flex-col border-l border-gray-200 pl-6 min-w-0">
+                  <div className="flex flex-col border-t sm:border-t-0 sm:border-l border-gray-200 pt-3 sm:pt-0 sm:pl-6 min-w-0">
                     <span className="text-[10px] font-bold text-gray-400 uppercase mb-1">Equipe Responsável</span>
                     <span className="text-sm font-black text-gray-800 break-words">👩‍🏫 Profª {club.prof}</span>
                     <span className="text-xs font-bold text-purple-600 mt-0.5 break-words">👨‍💻 {club.estag} (Estag)</span>
                   </div>
-                  <div className="flex flex-col border-l border-gray-200 pl-6 min-w-0">
+                  <div className="flex flex-col border-t xl:border-t-0 xl:border-l border-gray-200 pt-3 xl:pt-0 xl:pl-6 min-w-0">
                     <span className="text-[10px] font-bold text-gray-400 uppercase mb-1">Agenda</span>
                     <span className="text-sm font-black text-gray-800 break-words">{club.dias}</span>
                     <span className="text-xs font-bold text-cetecBlue mt-0.5 break-words">{club.horario}</span>
@@ -254,7 +254,7 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
             </div>
 
             <div className="flex flex-col xl:flex-row gap-5 flex-1 min-h-0 overflow-hidden">
-              <div className="w-full xl:w-[34%] ui-surface-card ui-surface-card--pad flex flex-col h-[340px] xl:h-full overflow-hidden shrink-0">
+              <div className="w-full xl:w-[34%] ui-surface-card ui-surface-card--pad flex flex-col h-[320px] sm:h-[340px] xl:h-full overflow-hidden shrink-0">
                 <div className="ui-section-head shrink-0 border-b border-gray-50 pb-4 mb-5">
                   <h4 className="font-black text-lg text-gray-800">Alunos</h4>
                   <button type="button" onClick={() => setShowAlunoModal(true)} className="bg-gray-100 text-cetecBlue hover:bg-blue-50 font-black w-9 h-9 rounded-lg text-xl leading-none transition flex items-center justify-center">+</button>
@@ -264,7 +264,7 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
                   <ul className="space-y-3 font-semibold text-gray-600">
                     {alunos.map((aluno) => (
                       <li key={aluno.id || `${aluno.nome}-${aluno.matricula}`} className="ui-card-tile ui-card-tile--row group animate-[fadeIn_0.3s_ease-in-out]">
-                        <div className="flex items-center w-full gap-2">
+                        <div className="flex items-start sm:items-center w-full gap-2">
                           <div className="w-9 h-9 bg-blue-50 text-cetecBlue rounded-full flex items-center justify-center mr-3 shrink-0">
                             <span className="material-symbols-rounded text-[18px]">person</span>
                           </div>
@@ -276,7 +276,7 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
                             type="button"
                             onClick={() => removeAluno(aluno)}
                             disabled={Boolean(alunoLoadingMap?.[aluno.id || `${aluno?.matricula || ''}-${aluno?.nome || ''}`])}
-                            className={`btn-3d font-black text-[10px] px-2.5 py-1.5 rounded-md border-b-[3px] transition-colors min-w-[74px] shrink-0 ${Boolean(alunoLoadingMap?.[aluno.id || `${aluno?.matricula || ''}-${aluno?.nome || ''}`]) ? 'bg-gray-400 text-white border-gray-600 cursor-wait' : 'bg-gray-700 text-white border-gray-900 hover:bg-gray-800'}`}
+                            className={`btn-3d font-black text-[10px] px-2.5 py-1.5 rounded-md border-b-[3px] transition-colors min-w-[74px] shrink-0 mt-0.5 sm:mt-0 ${Boolean(alunoLoadingMap?.[aluno.id || `${aluno?.matricula || ''}-${aluno?.nome || ''}`]) ? 'bg-gray-400 text-white border-gray-600 cursor-wait' : 'bg-gray-700 text-white border-gray-900 hover:bg-gray-800'}`}
                           >
                             {Boolean(alunoLoadingMap?.[aluno.id || `${aluno?.matricula || ''}-${aluno?.nome || ''}`]) ? '...' : 'REMOVER'}
                           </button>
@@ -326,7 +326,7 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
                 onChange={(e) => handleAlunoMatriculaChange(e.target.value)}
               />
               <input className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cetecGreen font-bold text-sm text-gray-700" placeholder="Ex: ANA SOUZA" value={novoAluno.nome} autoCapitalize="characters" onChange={(e) => setNovoAluno((curr) => ({ ...curr, nome: toUpperText(e.target.value, '') }))} required />
-              <div className="flex justify-end gap-2 pt-1">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-1">
                 <button type="button" onClick={() => setShowAlunoModal(false)} className="bg-gray-200 text-gray-700 font-bold px-4 py-2 rounded-xl">Cancelar</button>
                 <button type="submit" disabled={savingAluno} className="btn-3d bg-cetecGreen text-white font-black px-5 py-2.5 rounded-xl border-b-[4px] border-cetecGreenDark hover:bg-[#7ed152]">{savingAluno ? 'Salvando...' : 'Salvar Aluno'}</button>
               </div>
@@ -351,7 +351,7 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
               </select>
               <input className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cetecGreen font-bold text-sm text-gray-700" placeholder="Ex: INTRODUÇÃO AO SCRATCH" value={novoEncontro.assunto} autoCapitalize="characters" onChange={(e) => setNovoEncontro((curr) => ({ ...curr, assunto: toUpperText(e.target.value, '') }))} required />
               <input className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cetecGreen font-bold text-sm text-gray-700" type="date" placeholder="Data do encontro" title="Selecione a data do encontro" value={novoEncontro.data} onChange={(e) => setNovoEncontro((curr) => ({ ...curr, data: e.target.value }))} required />
-              <div className="flex justify-end gap-2 pt-1">
+              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-1">
                 <button type="button" onClick={() => setShowEncontroModal(false)} className="bg-gray-200 text-gray-700 font-bold px-4 py-2 rounded-xl">Cancelar</button>
                 <button type="submit" disabled={savingEncontro} className="btn-3d bg-cetecGreen text-white font-black px-5 py-2.5 rounded-xl border-b-[4px] border-cetecGreenDark hover:bg-[#7ed152]">{savingEncontro ? 'Salvando...' : 'Salvar Encontro'}</button>
               </div>

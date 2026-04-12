@@ -25,7 +25,7 @@ export function ClubsPanelPage({ userName, onLogout, onOpenNewClubModal, clubes,
   }, [clubes, normalizedSearch, quickFilter, searchField]);
 
   return (
-    <div id="main-app" className="flex h-screen w-screen overflow-hidden">
+    <div id="main-app" className="flex flex-col lg:flex-row min-h-screen w-full overflow-hidden lg:h-screen">
       <AppSidebar
         activeView="clubs"
         userName={userName}
@@ -35,17 +35,17 @@ export function ClubsPanelPage({ userName, onLogout, onOpenNewClubModal, clubes,
         onOpenNewClub={onOpenNewClubModal}
       />
 
-      <main className="dashboard-main-modern flex-1 flex flex-col h-screen overflow-hidden relative bg-bgDashboard">
+      <main className="dashboard-main-modern flex-1 flex flex-col min-h-0 overflow-hidden relative bg-bgDashboard lg:h-screen">
         <div className="dashboard-bg-orb dashboard-bg-orb-a" aria-hidden="true" />
         <div className="dashboard-bg-orb dashboard-bg-orb-b" aria-hidden="true" />
 
-        <header className="dashboard-header-modern pt-6 pb-4 px-8 shrink-0">
+        <header className="dashboard-header-modern pt-4 lg:pt-6 pb-4 px-4 sm:px-6 lg:px-8 shrink-0">
           <div className="flex justify-between items-end gap-3 flex-wrap">
             <div>
-              <h2 className="text-3xl font-black text-cetecBlue tracking-tight">Painel de Clubes</h2>
+              <h2 className="text-2xl sm:text-3xl font-black text-cetecBlue tracking-tight">Painel de Clubes</h2>
               <p className="text-gray-500 font-bold text-xs mt-1">Gestão completa dos clubes cadastrados com busca ativa e filtros rápidos</p>
             </div>
-            <button type="button" onClick={onOpenNewClubModal} className="btn-3d bg-cetecGreen text-white font-black py-2.5 px-5 rounded-xl border-b-[4px] border-cetecGreenDark hover:bg-[#7ed152] text-xs items-center shadow-sm transition">
+            <button type="button" onClick={onOpenNewClubModal} className="btn-3d bg-cetecGreen text-white font-black py-2.5 px-5 rounded-xl border-b-[4px] border-cetecGreenDark hover:bg-[#7ed152] text-xs items-center shadow-sm transition w-full sm:w-auto">
               + Novo Clube
             </button>
           </div>
@@ -86,12 +86,12 @@ export function ClubsPanelPage({ userName, onLogout, onOpenNewClubModal, clubes,
           </div>
         </header>
 
-        <div className="px-8 pb-6 flex-1 flex flex-col min-h-0 overflow-hidden relative z-[2]">
+        <div className="px-4 sm:px-6 lg:px-8 pb-5 lg:pb-6 flex-1 flex flex-col min-h-0 overflow-y-auto lg:overflow-hidden relative z-[2]">
           {loading && <div className="ui-state-panel ui-state-panel--loading">A sincronizar com a base de dados...</div>}
           {error && <div className="ui-state-panel ui-state-panel--empty text-red-500">{error}</div>}
 
           {!loading && !error && (
-            <div className="flex-1 overflow-y-auto no-scrollbar pb-4 pr-2">
+            <div className="flex-1 overflow-y-auto no-scrollbar pb-4 pr-0 sm:pr-2">
               {filteredClubes.length === 0 && (
                 <div className="ui-state-panel ui-state-panel--empty mb-4">Nenhum clube encontrado para os filtros aplicados.</div>
               )}

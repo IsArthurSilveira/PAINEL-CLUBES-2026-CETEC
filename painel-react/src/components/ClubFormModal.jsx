@@ -46,9 +46,9 @@ export function ClubFormModal({ open, title, initialValues, onClose, onSubmit, s
             <SelectField label="Categoria" value={form.categoria} onChange={(value) => updateField('categoria', value)} options={['Clubes Iniciais', 'Clubes Mistos', 'Clubes Finais']} />
           </div>
 
-          <div className="flex justify-end gap-2 pt-1">
-            <button type="button" onClick={onClose} className="bg-gray-200 text-gray-700 font-bold px-4 py-2 rounded-xl">Cancelar</button>
-            <button className="btn-3d bg-cetecGreen text-white font-black px-5 py-2.5 rounded-xl border-b-[4px] border-cetecGreenDark hover:bg-[#7ed152]" type="submit" disabled={saving}>
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-1">
+            <button type="button" onClick={onClose} className="bg-gray-200 text-gray-700 font-bold px-4 py-2 rounded-xl w-full sm:w-auto">Cancelar</button>
+            <button className="btn-3d bg-cetecGreen text-white font-black px-5 py-2.5 rounded-xl border-b-[4px] border-cetecGreenDark hover:bg-[#7ed152] w-full sm:w-auto" type="submit" disabled={saving}>
               {saving ? 'Salvando...' : 'Salvar Clube'}
             </button>
           </div>
