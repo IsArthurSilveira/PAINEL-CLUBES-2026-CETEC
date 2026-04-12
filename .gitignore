@@ -1,0 +1,39 @@
+# Google Apps Script (ignorar local, não commitir)
+apps-script/
+
+# Node modules
+node_modules/
+npm-debug.log
+yarn-error.log
+.pnpm-debug.log
+
+# Build outputs
+dist/
+build/
+.vite/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Sensitive data
+**/clubes-importar.json
+**/clubes.example.json
+**/listagem clubes.pdf
+**/*.private.json
+
+# Logs
+logs/
+*.log
