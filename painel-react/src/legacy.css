@@ -759,13 +759,14 @@ details > summary::-webkit-details-marker { display: none; }
     grid-template-columns: repeat(8, minmax(0, 1fr));
     gap: 0.8rem;
     align-items: start;
-    grid-auto-rows: 228px;
+    grid-auto-rows: minmax(228px, auto);
 }
 
 .bi-grid-top > .bi-card {
     min-width: 0;
     grid-column: span 2;
-    height: 228px;
+    height: auto;
+    min-height: 228px;
 }
 
 .bi-grid-top > .bi-utec-fill-card {
@@ -779,7 +780,7 @@ details > summary::-webkit-details-marker { display: none; }
 .bi-card-tall {
     grid-row: auto;
     min-height: 228px;
-    height: 228px;
+    height: auto;
 }
 
 .bi-grid-3 {
@@ -833,14 +834,14 @@ details > summary::-webkit-details-marker { display: none; }
 
 .bi-ring-content {
     display: grid;
-    grid-template-columns: 1fr 148px;
+    grid-template-columns: minmax(0, 1fr) 140px;
     margin-top: 10px;
     gap: 0.45rem;
     height: 100%;
 }
 
 .bi-ring-content--stacked {
-    grid-template-columns: 1fr 148px;
+    grid-template-columns: minmax(0, 1fr) 140px;
     align-items: start;
 }
 
@@ -850,12 +851,13 @@ details > summary::-webkit-details-marker { display: none; }
     gap: 0.55rem;
     padding-right: 0.2rem;
     margin-top: 0.45rem;
+    min-width: 0;
 }
 
 .bi-ring-legend-row {
     display: grid;
     grid-template-columns: 10px 1fr auto;
-    align-items: center;
+    align-items: start;
     gap: 0.5rem;
 }
 
@@ -870,20 +872,22 @@ details > summary::-webkit-details-marker { display: none; }
     font-size: 0.79rem;
     color: #334155;
     font-weight: 700;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.2;
 }
 
 .bi-ring-value {
     font-size: 0.78rem;
     color: #0f172a;
     font-weight: 900;
+    white-space: nowrap;
 }
 
 .bi-ring-chart {
     height: 126px;
     margin-top: -0.2rem;
+    min-width: 0;
 }
 
 .bi-gender-rings {
@@ -1076,6 +1080,7 @@ details > summary::-webkit-details-marker { display: none; }
 
     .bi-grid-top {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-auto-rows: minmax(210px, auto);
     }
 
     .bi-grid-top > .bi-utec-fill-card,
@@ -1087,6 +1092,7 @@ details > summary::-webkit-details-marker { display: none; }
 
     .bi-grid-top > .bi-card {
         grid-column: span 1;
+        min-height: 210px;
     }
 
     .bi-grid-top > .bi-utec-fill-card,
@@ -1138,6 +1144,26 @@ details > summary::-webkit-details-marker { display: none; }
     .bi-grid-top > .bi-escolas-utec-fill-card,
     .bi-card-tall {
         grid-column: auto;
+    }
+
+    .bi-grid-top > .bi-card {
+        min-height: 0;
+    }
+
+    .bi-ring-content,
+    .bi-ring-content--stacked {
+        grid-template-columns: 1fr;
+        gap: 0.6rem;
+    }
+
+    .bi-ring-legend {
+        order: 2;
+        margin-top: 0;
+    }
+
+    .bi-ring-chart {
+        order: 1;
+        margin: 0 auto;
     }
 }
 
