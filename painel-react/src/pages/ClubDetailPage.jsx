@@ -194,7 +194,7 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
   }
 
   return (
-    <div id="main-app" className="flex flex-col lg:flex-row min-h-screen w-full overflow-x-hidden lg:overflow-hidden lg:h-screen">
+    <div id="main-app" className="app-shell flex flex-col lg:flex-row min-h-screen w-full overflow-x-hidden lg:overflow-hidden lg:h-screen">
       <AppSidebar
         activeView="clubs"
         userName={userName}
@@ -204,7 +204,7 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
         onOpenNewClub={onOpenNewClubModal}
       />
 
-      <main className="flex-1 flex flex-col min-h-0 overflow-visible lg:overflow-hidden relative bg-bgDashboard lg:h-screen">
+      <main className="app-main-pane dashboard-main-modern flex-1 flex flex-col min-h-0 overflow-visible lg:overflow-hidden relative bg-bgDashboard lg:h-screen">
         <div className="px-4 sm:px-6 lg:px-8 py-4 lg:py-6 flex-1 flex flex-col min-h-0 overflow-visible lg:overflow-hidden">
           {(detailsError || actionError) && <div className="ui-state-panel ui-state-panel--empty text-red-500">{detailsError || actionError}</div>}
 

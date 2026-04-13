@@ -23,69 +23,63 @@ export function AppSidebar({ activeView, userName, onLogout, onOpenDashboard, on
 
   if (isMobile) {
     return (
-      <aside className="app-sidebar-mobile w-full bg-[#03258C] text-white flex flex-col rounded-b-[1.3rem] shadow-xl z-20 border-b-4 border-cetecBlueDark shrink-0">
-        <div className="app-sidebar-mobile-top px-4 pt-3 pb-2 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <img src={logoEducacode} alt="Logo Educacode" className="w-[122px] h-auto object-contain shrink-0" />
-            <p className="app-sidebar-mobile-user text-xs font-extrabold truncate text-white/90">{userName}</p>
+      <>
+        <header className="app-mobile-topbar">
+          <div className="app-mobile-topbar__inner">
+            <img src={logoEducacode} alt="Logo Educacode" className="app-mobile-topbar__logo" />
+            <p className="app-mobile-topbar__user">{userName}</p>
+            <button
+              type="button"
+              onClick={onLogout}
+              className="app-mobile-topbar__logout"
+              title={`Sair do sistema (${userName})`}
+              aria-label="Sair do sistema"
+            >
+              <span className="material-symbols-rounded text-[18px]">logout</span>
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={onLogout}
-            className="app-sidebar-mobile-logout h-9 w-9 rounded-lg bg-red-500/25 text-red-100 hover:bg-red-500 hover:text-white transition inline-flex items-center justify-center"
-            title={`Sair do sistema (${userName})`}
-            aria-label="Sair do sistema"
-          >
-            <span className="material-symbols-rounded text-[18px]">logout</span>
-          </button>
-        </div>
+        </header>
 
-        <nav className="app-sidebar-mobile-nav px-3 pb-3 pt-1 flex items-center gap-2 overflow-x-auto no-scrollbar">
-          <button
-            type="button"
-            onClick={onOpenDashboard}
-            className={`app-sidebar-mobile-btn nav-btn h-11 px-4 rounded-2xl font-bold transition inline-flex items-center gap-1.5 border-b-4 text-sm whitespace-nowrap ${
-              activeView === 'dashboard'
-                ? 'bg-white/20 border-white/30'
-                : 'bg-white/10 hover:bg-white/20 border-transparent hover:border-white/20'
-            }`}
-            title="Visão Geral"
-          >
-            <span className="material-symbols-rounded text-[18px]">dashboard</span>
-            <span>Visão Geral</span>
-          </button>
+        <aside className="app-mobile-tabbar" aria-label="Navegação principal">
+          <nav className="app-mobile-tabbar__nav">
+            <button
+              type="button"
+              onClick={onOpenDashboard}
+              className={`app-mobile-tab-btn ${activeView === 'dashboard' ? 'is-active' : ''}`}
+              title="Visão Geral"
+            >
+              <span className="material-symbols-rounded text-[18px]">dashboard</span>
+              <span>Visão Geral</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={onOpenClubs}
-            className={`app-sidebar-mobile-btn nav-btn h-11 px-4 rounded-2xl font-bold transition inline-flex items-center gap-1.5 border-b-4 text-sm whitespace-nowrap ${
-              activeView === 'clubs'
-                ? 'bg-white/20 border-white/30'
-                : 'bg-white/10 hover:bg-white/20 border-transparent hover:border-white/20'
-            }`}
-            title="Painel de Clubes"
-          >
-            <span className="material-symbols-rounded text-[18px]">groups</span>
-            <span>Painel de Clubes</span>
-          </button>
+            <button
+              type="button"
+              onClick={onOpenClubs}
+              className={`app-mobile-tab-btn ${activeView === 'clubs' ? 'is-active' : ''}`}
+              title="Painel de Clubes"
+            >
+              <span className="material-symbols-rounded text-[18px]">groups</span>
+              <span>Clubes</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={onOpenNewClub}
-            className="app-sidebar-mobile-btn nav-btn h-11 px-4 rounded-2xl bg-white/10 font-bold hover:bg-white/20 transition inline-flex items-center gap-1.5 border-b-4 border-transparent hover:border-white/20 text-sm whitespace-nowrap"
-            title="Novo Clube"
-          >
-            <span className="material-symbols-rounded text-[18px]">add_circle</span>
-            <span>Novo Clube</span>
-          </button>
-        </nav>
-      </aside>
+            <button
+              type="button"
+              onClick={onOpenNewClub}
+              className="app-mobile-tab-btn"
+              title="Novo Clube"
+            >
+              <span className="material-symbols-rounded text-[18px]">add_circle</span>
+              <span>Novo</span>
+            </button>
+          </nav>
+        </aside>
+      </>
     );
   }
 
   return (
     <aside
-      className={`${expandedDesktop ? 'w-64' : 'w-[92px]'} bg-[#03258C] text-white flex flex-col rounded-r-[2rem] shadow-xl z-20 border-r-4 border-cetecBlueDark shrink-0 transition-all duration-300 ease-in-out`}
+      className={`app-sidebar-desktop ${expandedDesktop ? 'w-64' : 'w-[92px]'} bg-[#03258C] text-white flex flex-col rounded-r-[2rem] shadow-xl z-20 border-r-4 border-cetecBlueDark shrink-0 transition-all duration-300 ease-in-out`}
       onMouseEnter={() => setExpanded(true)}
       onMouseLeave={() => setExpanded(false)}
     >

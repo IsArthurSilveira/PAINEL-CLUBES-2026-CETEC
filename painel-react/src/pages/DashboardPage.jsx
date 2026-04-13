@@ -67,7 +67,7 @@ export function DashboardPage({
   }
 
   return (
-    <div id="main-app" className="flex flex-col lg:flex-row min-h-screen w-full overflow-x-hidden lg:overflow-hidden lg:h-screen">
+    <div id="main-app" className="app-shell flex flex-col lg:flex-row min-h-screen w-full overflow-x-hidden lg:overflow-hidden lg:h-screen">
       <AppSidebar
         activeView="dashboard"
         userName={userName}
@@ -77,7 +77,7 @@ export function DashboardPage({
         onOpenNewClub={onOpenNewClubModal}
       />
 
-      <main className="dashboard-main-modern flex-1 flex flex-col min-h-0 overflow-visible lg:overflow-hidden relative bg-bgDashboard lg:h-screen">
+      <main className="app-main-pane dashboard-main-modern flex-1 flex flex-col min-h-0 overflow-visible lg:overflow-hidden relative bg-bgDashboard lg:h-screen">
         <div className="dashboard-bg-orb dashboard-bg-orb-a" aria-hidden="true" />
         <div className="dashboard-bg-orb dashboard-bg-orb-b" aria-hidden="true" />
 

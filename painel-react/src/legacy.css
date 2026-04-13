@@ -41,6 +41,131 @@ details > summary::-webkit-details-marker { display: none; }
     line-height: 1;
 }
 
+#main-app.app-shell {
+    width: 100%;
+    min-height: 100dvh;
+    position: relative;
+}
+
+.app-main-pane {
+    min-width: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.app-sidebar-desktop {
+    border-color: rgba(1, 30, 98, 0.36);
+}
+
+.app-mobile-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 35;
+    background: linear-gradient(135deg, rgba(3, 37, 140, 0.98), rgba(5, 52, 172, 0.94));
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.16);
+    padding-top: env(safe-area-inset-top);
+}
+
+.app-mobile-topbar__inner {
+    min-height: 58px;
+    padding: 0.55rem 0.9rem;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.7rem;
+}
+
+.app-mobile-topbar__logo {
+    width: 112px;
+    height: auto;
+    object-fit: contain;
+}
+
+.app-mobile-topbar__user {
+    margin: 0;
+    font-size: 0.7rem;
+    letter-spacing: 0.02em;
+    font-weight: 900;
+    color: rgba(255, 255, 255, 0.9);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.app-mobile-topbar__logout {
+    width: 34px;
+    height: 34px;
+    border: 1px solid rgba(248, 113, 113, 0.5);
+    border-radius: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fee2e2;
+    background: rgba(239, 68, 68, 0.2);
+    transition: all 0.18s ease;
+}
+
+.app-mobile-topbar__logout:hover {
+    background: rgba(239, 68, 68, 0.88);
+    color: #fff;
+}
+
+.app-mobile-tabbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 45;
+    padding: 0.5rem 0.7rem calc(0.5rem + env(safe-area-inset-bottom));
+    background: linear-gradient(to top, rgba(237, 243, 250, 0.98), rgba(237, 243, 250, 0.72));
+    backdrop-filter: blur(10px);
+}
+
+.app-mobile-tabbar__nav {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 0.3rem;
+    border-radius: 1.05rem;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 14px 26px rgba(15, 23, 42, 0.12);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.25rem;
+}
+
+.app-mobile-tab-btn {
+    border: 0;
+    background: transparent;
+    border-radius: 0.8rem;
+    min-height: 56px;
+    padding: 0.35rem 0.3rem;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    color: #475569;
+    font-size: 0.64rem;
+    font-weight: 900;
+    transition: all 0.2s ease;
+}
+
+.app-mobile-tab-btn .material-symbols-rounded {
+    font-size: 1.12rem;
+}
+
+.app-mobile-tab-btn.is-active {
+    color: #03258C;
+    background: rgba(3, 37, 140, 0.1);
+    box-shadow: inset 0 0 0 1px rgba(3, 37, 140, 0.12);
+}
+
+.app-mobile-tab-btn:active {
+    transform: translateY(1px);
+}
+
 .dashboard-shell {
     display: flex;
     flex-direction: column;
@@ -58,6 +183,25 @@ details > summary::-webkit-details-marker { display: none; }
     background: radial-gradient(circle at 15% 15%, rgba(1, 30, 98, 0.14), transparent 40%),
                 radial-gradient(circle at 86% 18%, rgba(110, 190, 68, 0.14), transparent 34%),
                 linear-gradient(165deg, #edf3fa 0%, #f7fafd 38%, #eef4fb 100%);
+}
+
+@media (min-width: 1024px) {
+    #main-app.app-shell {
+        max-width: calc(100vw - 1.8rem);
+        min-height: calc(100dvh - 1.8rem);
+        margin: 0.9rem auto;
+        border-radius: 1.75rem;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        background: rgba(255, 255, 255, 0.4);
+        box-shadow: 0 22px 46px rgba(15, 23, 42, 0.14);
+        overflow: hidden;
+    }
+
+    .app-sidebar-desktop {
+        margin: 0.65rem 0;
+        border-radius: 0 1.55rem 1.55rem 0;
+        box-shadow: 0 14px 30px rgba(1, 30, 98, 0.22);
+    }
 }
 
 .dashboard-bg-orb {
@@ -1024,6 +1168,10 @@ details > summary::-webkit-details-marker { display: none; }
 }
 
 @media (max-width: 1024px) {
+    .app-main-pane {
+        padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+    }
+
     .dashboard-commandbar {
         flex-direction: column;
         align-items: stretch;
@@ -1080,7 +1228,7 @@ details > summary::-webkit-details-marker { display: none; }
 }
 
 @media (max-width: 768px) {
-    #main-app {
+    #main-app.app-shell {
         min-height: 100dvh;
         width: 100%;
     }
