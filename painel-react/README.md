@@ -1,38 +1,28 @@
-# Painel CETEC - Migracao React
+# Painel de Clubes CETEC (React)
 
-Aplicacao React (Vite) criada para migrar o painel atual mantendo integracao com Google Apps Script.
+Aplicacao frontend em React + Vite para login, dashboard e gestao de clubes com integracao via Apps Script.
 
-## Stack
+## Requisitos
 
-- React + Vite
-- Chart.js (via react-chartjs-2)
-- CSS proprio com variaveis (sem Tailwind)
+- Node.js 20+
+- npm
 
-## Como executar
-
-1. Instalar dependencias:
+## Comandos
 
 ```bash
 npm install
-```
-
-2. Subir ambiente de desenvolvimento:
-
-```bash
 npm run dev
-```
-
-3. Gerar build de producao:
-
-```bash
 npm run build
 ```
 
-## Configuracao da API
+## API
 
-Por padrao, a aplicacao usa a URL do Apps Script definida em `src/config.js`.
+A URL da API pode ser definida de duas formas:
 
-Se quiser customizar, crie um `.env` com:
+- `src/config.js` (padrao do projeto)
+- `.env` com `VITE_API_URL`
+
+Exemplo:
 
 ```bash
 VITE_API_URL=https://script.google.com/macros/s/SEU_DEPLOY/exec
@@ -40,22 +30,14 @@ VITE_API_URL=https://script.google.com/macros/s/SEU_DEPLOY/exec
 
 ## Estrutura principal
 
-- `src/components/LoginPage.jsx`: login na API
-- `src/components/PanelPage.jsx`: carregamento de clubes e contagem de alunos
-- `src/components/DashboardView.jsx`: KPIs, filtros e graficos
-- `src/services/api.js`: camada de `GET/POST` com fallback JSONP para localhost
-- `src/styles.css`: design system com variaveis CSS
+- `src/pages`: rotas de Login, Dashboard, Clubes e Detalhes
+- `src/components`: sidebar, dashboard e modais
+- `src/services/api.js`: comunicacao com backend
+- `src/hooks/useClubes.js`: estado e operacoes de clubes
+- `src/styles/styles.css`: base visual e design system
+- `src/styles/legacy.css`: layout do painel e responsividade
 
-## Estado atual da migracao
+## Observacoes
 
-- Login funcional
-- Dashboard com filtros por status/categoria
-- Grafico por categoria
-- Grafico por UTEC com subfiltro local (`Tudo`, `Manha`, `Tarde`)
-- Contagem de alunos por clube (somada nos KPIs)
-
-## Proximos passos sugeridos
-
-- Migrar tela de detalhes de clube (encontros e alunos)
-- Criar modulo de alunos com graficos de genero, turma e faixa etaria
-- Adicionar React Router para separar rotas de Login, Dashboard e Clube
+- O projeto usa graficos com `react-chartjs-2` / `chart.js`.
+- O app possui metadados para instalacao em mobile (manifest + icones em `public`).

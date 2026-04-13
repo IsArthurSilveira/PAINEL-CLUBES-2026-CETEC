@@ -26,4 +26,5 @@ dist-ssr
 # Dados sensiveis
 scripts/clubes-importar.json
 scripts/clubes.example.json
+scripts/alunos-importar.json
 scripts/*.private.json
