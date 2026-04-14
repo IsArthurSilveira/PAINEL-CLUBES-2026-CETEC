@@ -36,9 +36,9 @@ export function clearSessionToken() {
 export async function validateSession() {
   try {
     const data = await apiPost({ acao: 'validar_sessao' });
-    return Boolean(data?.sucesso);
+    return data?.sucesso ? data : null;
   } catch {
-    return false;
+    return null;
   }
 }
 

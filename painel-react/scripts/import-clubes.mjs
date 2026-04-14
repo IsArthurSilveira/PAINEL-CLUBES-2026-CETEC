@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbz3PlOFnjV3ZosqpRWhmVAnnSAKVp3AmR6z1SvRlI2lMIvtp8DAJwCccod9rfn2-mNa0Q/exec';
+const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbw7wF-mISf8_xu8w_f9-ycgih5eTgdOkFRiCmAsQD5BZt6lB7RWo099PcPPJIwYIKG4nw/exec';
 const API_URL = process.env.VITE_API_URL || DEFAULT_API_URL;
 const inputPath = process.argv[2];
 

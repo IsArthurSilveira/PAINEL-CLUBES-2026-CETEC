@@ -17,7 +17,7 @@ export function LoginPageRoute({ userName, onLogin }) {
       const data = await apiPost({ acao: 'login', email: email.trim(), senha });
       if (data?.sucesso && data?.token) {
         setSessionToken(data.token);
-        onLogin({ name: data.nome || 'Usuário', token: data.token });
+        onLogin({ name: data.nome || 'Usuário', access: data.acesso || 'usuario', token: data.token });
       } else {
         setErro('Credenciais incorretas.');
       }

@@ -34,7 +34,10 @@ function executarAcao(sheet, dadosReq) {
 
   // Para ações protegidas, validar token
   try {
-    assertAuthorized(dadosReq);
+    const session = assertAuthorized(dadosReq);
+    if (!hasPermission(session.acesso, acao)) {
+      return forbidden_();
+    }
   } catch (err) {
     if (err.codigo === 'NAO_AUTORIZADO') {
       return unauthorized_();
@@ -72,6 +75,45 @@ function executarAcao(sheet, dadosReq) {
     const novoId = Utilities.getUuid(); 
     aba.appendRow([novoId, dadosReq.nome, dadosReq.escola, dadosReq.utec, dadosReq.prof, dadosReq.estag, dadosReq.dias, dadosReq.horario, dadosReq.categoria, dadosReq.status || 'PENDENTE', dataHora, dataHora]);
     return { sucesso: true, id: novoId };
+  }
+
+  if (acao === 'atualizar_clube') {
+    const aba = sheet.getSheetByName('Clubes');
+    const dados = aba.getDataRange().getValues();
+    const headers = dados.length ? dados[0] : [];
+    const idBusca = String(dadosReq.id_clube || dadosReq.id || '').trim();
+    const idxId = findHeaderIndex(headers, ['ID', 'id', 'ID_Clube', 'ID Clube', 'id_clube', 'id clube']);
+    const idxNome = findHeaderIndex(headers, ['Nome', 'nome']);
+    const idxEscola = findHeaderIndex(headers, ['Escola', 'escola']);
+    const idxUtec = findHeaderIndex(headers, ['UTEC', 'utec']);
+    const idxProf = findHeaderIndex(headers, ['Prof', 'prof', 'Professor', 'professor']);
+    const idxEstag = findHeaderIndex(headers, ['Estag', 'estag', 'Estagiario', 'Estagiário', 'estagiario', 'estagiário']);
+    const idxDias = findHeaderIndex(headers, ['Dias', 'dias']);
+    const idxHorario = findHeaderIndex(headers, ['Horario', 'Horário', 'horario', 'horário']);
+    const idxCategoria = findHeaderIndex(headers, ['Categoria', 'categoria']);
+    const idxStatus = findHeaderIndex(headers, ['Status', 'status']);
+    const idxAtualizadoEm = findHeaderIndex(headers, ['Atualizado_em', 'Atualizado em', 'updated_at', 'updated at', 'Data_Modificacao', 'Data de Modificação']);
+
+    const idCol = idxId >= 0 ? idxId : 0;
+
+    for (let i = 1; i < dados.length; i++) {
+      if (String(dados[i][idCol] || '').trim() !== idBusca) continue;
+
+      if (idxNome >= 0) aba.getRange(i + 1, idxNome + 1).setValue(dadosReq.nome || dados[i][idxNome]);
+      if (idxEscola >= 0) aba.getRange(i + 1, idxEscola + 1).setValue(dadosReq.escola || dados[i][idxEscola]);
+      if (idxUtec >= 0) aba.getRange(i + 1, idxUtec + 1).setValue(dadosReq.utec || dados[i][idxUtec]);
+      if (idxProf >= 0) aba.getRange(i + 1, idxProf + 1).setValue(dadosReq.prof || dados[i][idxProf]);
+      if (idxEstag >= 0) aba.getRange(i + 1, idxEstag + 1).setValue(dadosReq.estag || dados[i][idxEstag]);
+      if (idxDias >= 0) aba.getRange(i + 1, idxDias + 1).setValue(dadosReq.dias || dados[i][idxDias]);
+      if (idxHorario >= 0) aba.getRange(i + 1, idxHorario + 1).setValue(dadosReq.horario || dados[i][idxHorario]);
+      if (idxCategoria >= 0) aba.getRange(i + 1, idxCategoria + 1).setValue(dadosReq.categoria || dados[i][idxCategoria]);
+      if (idxStatus >= 0 && dadosReq.status) aba.getRange(i + 1, idxStatus + 1).setValue(dadosReq.status);
+      if (idxAtualizadoEm >= 0) aba.getRange(i + 1, idxAtualizadoEm + 1).setValue(dataHora);
+
+      return { sucesso: true, id: idBusca };
+    }
+
+    return { sucesso: false, codigo: 'NAO_ENCONTRADO', erro: 'Clube não encontrado' };
   }
 
   if (acao === 'salvar_encontro') {
@@ -291,11 +333,13 @@ function loginWithToken(payload) {
     createdAt.toISOString(),
     expiresAt.toISOString(),
     '',
+    toText(usuario.acesso || 'usuario'),
   ]);
 
   return {
     sucesso: true,
     nome: toText(usuario.nome || 'USUARIO'),
+    acesso: toText(usuario.acesso || 'usuario'),
     token,
     expira_em: expiresAt.toISOString(),
   };
@@ -309,6 +353,7 @@ function validateCurrentSession(payload) {
     sucesso: true,
     usuario_id: session.usuarioId,
     nome: session.nome,
+    acesso: session.acesso,
     expira_em: session.expiraEm,
   };
 }
@@ -366,6 +411,7 @@ function getValidSessionFromPayload_(payload) {
     return {
       usuarioId: toText(data[i][1]),
       nome: toText(data[i][2]),
+      acesso: normalizarNivelAcesso(data[i][6] || encontrarAcessoUsuario_(toText(data[i][1])) || 'usuario'),
       expiraEm: expiresAt.toISOString(),
     };
   }
@@ -385,6 +431,14 @@ function unauthorized_() {
   };
 }
 
+function forbidden_() {
+  return {
+    sucesso: false,
+    codigo: 'SEM_PERMISSAO',
+    mensagem: 'Você não tem permissão para esta ação.',
+  };
+}
+
 function generateSessionToken() {
   const randomA = Utilities.getUuid();
   const randomB = Utilities.getUuid();
@@ -401,19 +455,47 @@ function toText(value) {
   return String(value || '');
 }
 
+function normalizarNivelAcesso(valor) {
+  const texto = toText(valor).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (texto.includes('admin')) return 'administrador';
+  if (texto.includes('leit') || texto.includes('read') || texto.includes('view')) return 'leitor';
+  if (texto.includes('usu') || texto.includes('user')) return 'usuario';
+  if (!texto) return 'usuario';
+  return texto;
+}
+
+function hasPermission(acesso, acao) {
+  const nivel = normalizarNivelAcesso(acesso);
+  if (nivel === 'administrador') return true;
+
+  const leitura = ['listar_clubes', 'listar_encontros', 'listar_alunos', 'validar_sessao'];
+  if (leitura.includes(acao)) return true;
+
+  if (nivel === 'usuario') {
+    return ['salvar_clube', 'salvar_encontro', 'salvar_aluno'].includes(acao);
+  }
+
+  return false;
+}
+
+function encontrarAcessoUsuario_(email) {
+  const usuario = findUserByEmail(email);
+  return usuario ? usuario.acesso : '';
+}
+
 function getOrCreateSessionSheet_() {
   const ss = SpreadsheetApp.openById(SHEET_ID);
   var sheet = ss.getSheetByName(SESSION_SHEET_NAME);
   if (!sheet) {
     sheet = ss.insertSheet(SESSION_SHEET_NAME);
-    sheet.appendRow(['token_hash', 'usuario_id', 'nome', 'created_at', 'expires_at', 'revoked_at']);
+    sheet.appendRow(['token_hash', 'usuario_id', 'nome', 'created_at', 'expires_at', 'revoked_at', 'acesso']);
   }
   return sheet;
 }
 
 function findUserByCredentials(email, senha) {
   const ss = SpreadsheetApp.openById(SHEET_ID);
-  const usersSheet = ss.getSheetByName('Usuarios');
+  const usersSheet = ss.getSheetByName('Usuarios') || ss.getSheetByName('USUARIOS');
   if (!usersSheet) {
     console.log('[USUARIO DEBUG] Sheet "Usuarios" não encontrada');
     return null;
@@ -421,26 +503,59 @@ function findUserByCredentials(email, senha) {
 
   const rows = usersSheet.getDataRange().getValues();
   console.log('[USUARIO DEBUG] Total de linhas lidas:', rows.length);
-  
-  // Colunas esperadas: A=email, B=senha, C=nome, D=data_ultimo_login (opcional)
-  for (var i = 1; i < rows.length; i += 1) {
-    const rowEmail = toText(rows[i][0]).toLowerCase().trim();
-    const rowSenha = toText(rows[i][1]).trim();
-    const rowNome = toText(rows[i][2]);
 
-    console.log(`[USUARIO DEBUG] Linha ${i}: email="${rowEmail}", senha="${rowSenha}", nome="${rowNome}"`);
+  const headers = rows.length ? rows[0] : [];
+  const idxEmail = findHeaderIndex(headers, ['EMAIL', 'E-MAIL', 'email', 'e-mail']);
+  const idxSenha = findHeaderIndex(headers, ['SENHA', 'senha', 'PASSWORD', 'password']);
+  const idxNome = findHeaderIndex(headers, ['NOME', 'nome', 'USUARIO', 'usuário', 'USUARIO_NOME']);
+  const idxAcesso = findHeaderIndex(headers, ['ACESSO', 'acesso', 'PERFIL', 'perfil', 'ROLE', 'role']);
+
+  for (var i = 1; i < rows.length; i += 1) {
+    const rowEmail = toText(rows[i][idxEmail >= 0 ? idxEmail : 0]).toLowerCase().trim();
+    const rowSenha = toText(rows[i][idxSenha >= 0 ? idxSenha : 1]).trim();
+    const rowNome = toText(rows[i][idxNome >= 0 ? idxNome : 2]);
+    const rowAcesso = normalizarNivelAcesso(rows[i][idxAcesso >= 0 ? idxAcesso : 3]);
+
+    console.log(`[USUARIO DEBUG] Linha ${i}: email="${rowEmail}", senha="${rowSenha}", nome="${rowNome}", acesso="${rowAcesso}"`);
     console.log(`[USUARIO DEBUG] Comparação: ${rowEmail} === ${email} && ${rowSenha} === ${senha}`);
 
     if (rowEmail === email && rowSenha === senha) {
       console.log('[USUARIO DEBUG] ✅ USUARIO ENCONTRADO!');
       return {
-        id: email, // Usa email como ID de usuário
-        nome: rowNome,
+        id: email,
+        nome: rowNome || 'USUARIO',
         email: rowEmail,
+        acesso: rowAcesso,
       };
     }
   }
 
   console.log('[USUARIO DEBUG] ❌ Nenhum usuario encontrado com essas credenciais');
+  return null;
+}
+
+function findUserByEmail(email) {
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const usersSheet = ss.getSheetByName('Usuarios') || ss.getSheetByName('USUARIOS');
+  if (!usersSheet) return null;
+
+  const rows = usersSheet.getDataRange().getValues();
+  const headers = rows.length ? rows[0] : [];
+  const idxEmail = findHeaderIndex(headers, ['EMAIL', 'E-MAIL', 'email', 'e-mail']);
+  const idxNome = findHeaderIndex(headers, ['NOME', 'nome', 'USUARIO', 'usuário', 'USUARIO_NOME']);
+  const idxAcesso = findHeaderIndex(headers, ['ACESSO', 'acesso', 'PERFIL', 'perfil', 'ROLE', 'role']);
+
+  for (var i = 1; i < rows.length; i += 1) {
+    const rowEmail = toText(rows[i][idxEmail >= 0 ? idxEmail : 0]).toLowerCase().trim();
+    if (rowEmail !== toText(email).toLowerCase().trim()) continue;
+
+    return {
+      id: rowEmail,
+      nome: toText(rows[i][idxNome >= 0 ? idxNome : 2]) || 'USUARIO',
+      email: rowEmail,
+      acesso: normalizarNivelAcesso(rows[i][idxAcesso >= 0 ? idxAcesso : 3]),
+    };
+  }
+
   return null;
 }

@@ -8,6 +8,7 @@ import { ClubDetailPage } from './pages/ClubDetailPage';
 import { ClubFormPage } from './pages/ClubFormPage';
 import { LoginPageRoute } from './pages/LoginPageRoute';
 import { AUTH_EXPIRED_EVENT, clearSessionToken, getSessionToken, logoutSession, validateSession } from './services/api';
+import { USER_ROLE_STORAGE_KEY, canCreateClub, normalizeAccessLevel } from './utils/permissions';
 
 function App() {
   return (
@@ -19,9 +20,11 @@ function App() {
 
 function AppRoutes() {
   const [userName, setUserName] = useState(localStorage.getItem('usuarioLogado') || '');
+  const [userRole, setUserRole] = useState(() => normalizeAccessLevel(localStorage.getItem(USER_ROLE_STORAGE_KEY) || 'usuario'));
   const [sessionChecked, setSessionChecked] = useState(false);
   const [newClubModalOpen, setNewClubModalOpen] = useState(false);
   const [newClubSaving, setNewClubSaving] = useState(false);
+  const [newClubModalError, setNewClubModalError] = useState('');
   const {
     clubes,
     loading,
@@ -50,14 +53,25 @@ function AppRoutes() {
         return;
       }
 
-      const ok = await validateSession();
+      const session = await validateSession();
       if (cancelled) return;
 
-      if (!ok) {
+      if (!session?.sucesso) {
         clearSessionToken();
         localStorage.removeItem('usuarioLogado');
+        localStorage.removeItem(USER_ROLE_STORAGE_KEY);
         setUserName('');
+        setUserRole('usuario');
         navigate('/login', { replace: true });
+        setSessionChecked(true);
+        return;
+      }
+
+      if (session?.nome) setUserName(session.nome);
+      if (session?.acesso) {
+        const normalizedRole = normalizeAccessLevel(session.acesso);
+        localStorage.setItem(USER_ROLE_STORAGE_KEY, normalizedRole);
+        setUserRole(normalizedRole);
       }
 
       setSessionChecked(true);
@@ -72,13 +86,17 @@ function AppRoutes() {
   useEffect(() => {
     function handleAuthExpired() {
       localStorage.removeItem('usuarioLogado');
+      localStorage.removeItem(USER_ROLE_STORAGE_KEY);
       setUserName('');
+      setUserRole('usuario');
       navigate('/login', { replace: true });
     }
 
     window.addEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired);
     return () => window.removeEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired);
   }, [navigate]);
+
+  const normalizedRole = normalizeAccessLevel(userRole);
 
   useEffect(() => {
     if (userName && sessionChecked) {
@@ -88,29 +106,45 @@ function AppRoutes() {
 
   const auth = useMemo(() => ({
     userName,
-    login: ({ name }) => {
+    login: ({ name, access }) => {
       localStorage.setItem('usuarioLogado', name);
+      localStorage.setItem(USER_ROLE_STORAGE_KEY, normalizeAccessLevel(access));
       setUserName(name);
+      setUserRole(normalizeAccessLevel(access));
       setSessionChecked(true);
       navigate('/dashboard', { replace: true });
     },
     logout: async () => {
       await logoutSession();
       localStorage.removeItem('usuarioLogado');
+      localStorage.removeItem(USER_ROLE_STORAGE_KEY);
       setUserName('');
+      setUserRole('usuario');
       setSessionChecked(true);
       navigate('/login', { replace: true });
     },
   }), [navigate, userName]);
 
+  function openNewClubModal() {
+    if (!canCreateClub(normalizedRole)) return;
+    setNewClubModalError('');
+    setNewClubModalOpen(true);
+  }
+
   async function handleCreateClub(form) {
     setNewClubSaving(true);
+    setNewClubModalError('');
     try {
       const result = await saveClub({ acao: 'salvar_clube', ...form, status: 'pendente' });
       if (result?.sucesso) {
         setNewClubModalOpen(false);
         await loadClubes();
+        return;
       }
+
+      setNewClubModalError(getActionError(result, 'Não foi possível salvar o clube.'));
+    } catch {
+      setNewClubModalError('Não foi possível salvar o clube.');
     } finally {
       setNewClubSaving(false);
     }
@@ -139,8 +173,9 @@ function AppRoutes() {
           element={(
             <DashboardPage
               userName={auth.userName}
+              userRole={normalizedRole}
               onLogout={auth.logout}
-              onOpenNewClubModal={() => setNewClubModalOpen(true)}
+              onOpenNewClubModal={openNewClubModal}
               clubes={clubes}
               loading={loading}
               error={error}
@@ -152,8 +187,9 @@ function AppRoutes() {
           element={(
             <ClubsPanelPage
               userName={auth.userName}
+              userRole={normalizedRole}
               onLogout={auth.logout}
-              onOpenNewClubModal={() => setNewClubModalOpen(true)}
+              onOpenNewClubModal={openNewClubModal}
               clubes={clubes}
               loading={loading}
               error={error}
@@ -165,6 +201,7 @@ function AppRoutes() {
           path="/clubes/:clubId/editar"
           element={(
             <ClubFormPage
+              userRole={normalizedRole}
               clubes={clubes}
               onSaveClub={saveClub}
             />
@@ -175,8 +212,9 @@ function AppRoutes() {
           element={(
             <ClubDetailPage
               userName={auth.userName}
+              userRole={normalizedRole}
               onLogout={auth.logout}
-              onOpenNewClubModal={() => setNewClubModalOpen(true)}
+              onOpenNewClubModal={openNewClubModal}
               clubes={clubes}
               details={details}
               detailsLoading={detailsLoading}
@@ -201,9 +239,15 @@ function AppRoutes() {
         onClose={() => setNewClubModalOpen(false)}
         onSubmit={handleCreateClub}
         saving={newClubSaving}
+        error={newClubModalError}
       />
     </>
   );
+}
+
+function getActionError(response, fallback) {
+  if (!response || typeof response !== 'object') return fallback;
+  return response.erro || response.mensagem || response.message || fallback;
 }
 
 export default App;

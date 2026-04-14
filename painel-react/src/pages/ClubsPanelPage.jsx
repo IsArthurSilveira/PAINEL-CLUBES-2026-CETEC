@@ -2,8 +2,9 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppSidebar } from '../components/AppSidebar';
 import { statusKey } from '../utils/clubes';
+import { canCreateClub } from '../utils/permissions';
 
-export function ClubsPanelPage({ userName, onLogout, onOpenNewClubModal, clubes, loading, error }) {
+export function ClubsPanelPage({ userName, userRole, onLogout, onOpenNewClubModal, clubes, loading, error }) {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [quickFilter, setQuickFilter] = useState('all');
@@ -29,6 +30,7 @@ export function ClubsPanelPage({ userName, onLogout, onOpenNewClubModal, clubes,
       <AppSidebar
         activeView="clubs"
         userName={userName}
+        userRole={userRole}
         onLogout={onLogout}
         onOpenDashboard={() => navigate('/dashboard')}
         onOpenClubs={() => navigate('/clubes')}
@@ -45,9 +47,11 @@ export function ClubsPanelPage({ userName, onLogout, onOpenNewClubModal, clubes,
               <h2 className="text-2xl sm:text-3xl font-black text-cetecBlue tracking-tight">Painel de Clubes</h2>
               <p className="text-gray-500 font-bold text-xs mt-1">Gestão completa dos clubes cadastrados com busca ativa e filtros rápidos</p>
             </div>
-            <button type="button" onClick={onOpenNewClubModal} className="btn-3d bg-cetecGreen text-white font-black py-2.5 px-5 rounded-xl border-b-[4px] border-cetecGreenDark hover:bg-[#7ed152] text-xs items-center shadow-sm transition w-full sm:w-auto">
-              + Novo Clube
-            </button>
+            {canCreateClub(userRole) && (
+              <button type="button" onClick={onOpenNewClubModal} className="btn-3d bg-cetecGreen text-white font-black py-2.5 px-5 rounded-xl border-b-[4px] border-cetecGreenDark hover:bg-[#7ed152] text-xs items-center shadow-sm transition w-full sm:w-auto">
+                + Novo Clube
+              </button>
+            )}
           </div>
 
           <div className="clubes-toolbar-row mt-4">

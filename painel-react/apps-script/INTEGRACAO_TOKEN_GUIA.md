@@ -5,8 +5,10 @@
 Seu Apps Script atual autentica apenas no login (verifica email/senha uma vez). A nova implementação:
 
 - ✅ **Login retorna um TOKEN** único e com TTL (8h)
+- ✅ **Login também retorna o nível de acesso** do usuário (`administrador`, `usuario` ou `leitor`)
 - ✅ **Cada ação posterior exige o TOKEN** no payload
 - ✅ Token é armazenado em uma sheet `SESSOES` com expiração
+- ✅ O backend passa a bloquear ações por nível de acesso
 - ✅ Se token expirou ou for inválido → `codigo: NAO_AUTORIZADO`
 - ✅ O frontend recebe o token e o envia automaticamente em cada requisição
 
@@ -19,10 +21,11 @@ Sua sheet `Usuarios` deve ter colunas:
 A: email
 B: senha
 C: nome
-D: data_ultimo_login (opcional, para seu uso)
+D: acesso (Administrador, Usuario ou Leitor)
+E: data_ultimo_login (opcional, para seu uso)
 ```
 
-**Importante**: A coluna 1 deve ser `email`, coluna 2 `senha`, coluna 3 `nome`.
+**Importante**: A coluna 1 deve ser `email`, coluna 2 `senha`, coluna 3 `nome` e a coluna 4 o nível de acesso.
 
 ### 2. Criar sheet `SESSOES` (será criada automaticamente)
 
@@ -35,6 +38,7 @@ C: nome           (nome do usuário para debug)
 D: created_at     (quando foi criado)
 E: expires_at     (quando expira - agora + 8 horas)
 F: revoked_at     (quando foi desconectado, se aplicável)
+G: acesso         (nível de acesso do usuário)
 ```
 
 ## 🔧 Passos de Integração

@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AppSidebar } from '../components/AppSidebar';
 import { formatDateBR, statusKey, toUpperText } from '../utils/clubes';
+import { canCreateAluno, canCreateEncontro, canDeleteAluno, canDeleteEncontro, canUpdateStatus } from '../utils/permissions';
 
-export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes, details, detailsError, onLoadDetails, onRefresh, onSaveAluno, onDeleteAluno, onSaveEncontro, onDeleteEncontro, onUpdateStatus }) {
+export function ClubDetailPage({ userName, userRole, onLogout, onOpenNewClubModal, clubes, details, detailsError, onLoadDetails, onRefresh, onSaveAluno, onDeleteAluno, onSaveEncontro, onDeleteEncontro, onUpdateStatus }) {
   const { clubId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -20,6 +21,11 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
   const [novoEncontro, setNovoEncontro] = useState({ modulo: 'lista-scratch', assunto: '', data: '' });
 
   const club = useMemo(() => clubes.find((item) => item.id === clubId) || null, [clubes, clubId]);
+  const allowCreateAluno = canCreateAluno(userRole);
+  const allowCreateEncontro = canCreateEncontro(userRole);
+  const allowDeleteAluno = canDeleteAluno(userRole);
+  const allowDeleteEncontro = canDeleteEncontro(userRole);
+  const allowUpdateStatus = canUpdateStatus(userRole);
   const returnTo = location.state?.from || '/clubes';
   const encontros = details?.encontros || [];
   const alunos = details?.alunos || [];
@@ -69,12 +75,18 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
   async function handleUpdateClubStatus(nextStatus) {
     setStatusValue(nextStatus);
     setSavingStatus(true);
+    setActionError('');
     try {
       const response = await onUpdateStatus({ acao: 'atualizar_status_clube', id_clube: club.id, status: statusValueToBackend(nextStatus) });
-      if (response?.sucesso) await refreshDetails();
-      else setStatusValue(statusKey(club.status) || 'pendente');
+      if (response?.sucesso) {
+        await refreshDetails();
+      } else {
+        setStatusValue(statusKey(club.status) || 'pendente');
+        setActionError(getErrorMessage(response, 'Não foi possível atualizar o status do clube.'));
+      }
     } catch {
       setStatusValue(statusKey(club.status) || 'pendente');
+      setActionError('Não foi possível atualizar o status do clube.');
     } finally {
       setSavingStatus(false);
     }
@@ -83,13 +95,18 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
   async function handleSaveAluno(event) {
     event.preventDefault();
     setSavingAluno(true);
+    setActionError('');
     try {
       const response = await onSaveAluno({ acao: 'salvar_aluno', id_clube: club.id, matricula: novoAluno.matricula || 'S/ MATRÍCULA', nome: novoAluno.nome });
       if (response?.sucesso) {
         setNovoAluno({ matricula: '', nome: '' });
         setShowAlunoModal(false);
         await refreshDetails();
+      } else {
+        setActionError(getErrorMessage(response, 'Não foi possível salvar o aluno.'));
       }
+    } catch {
+      setActionError('Não foi possível salvar o aluno.');
     } finally {
       setSavingAluno(false);
     }
@@ -103,6 +120,7 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
   async function handleSaveEncontro(event) {
     event.preventDefault();
     setSavingEncontro(true);
+    setActionError('');
     try {
       const response = await onSaveEncontro({
         acao: 'salvar_encontro',
@@ -115,7 +133,11 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
         setNovoEncontro({ modulo: 'lista-scratch', assunto: '', data: '' });
         setShowEncontroModal(false);
         await refreshDetails();
+      } else {
+        setActionError(getErrorMessage(response, 'Não foi possível salvar o encontro.'));
       }
+    } catch {
+      setActionError('Não foi possível salvar o encontro.');
     } finally {
       setSavingEncontro(false);
     }
@@ -198,6 +220,7 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
       <AppSidebar
         activeView="clubs"
         userName={userName}
+        userRole={userRole}
         onLogout={onLogout}
         onOpenDashboard={() => navigate('/dashboard')}
         onOpenClubs={() => navigate('/clubes')}
@@ -225,7 +248,7 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 <div className="flex flex-col gap-2 min-w-0 lg:col-span-4">
                 <h3 className="text-xl sm:text-2xl font-black text-gray-800 tracking-tight break-words">{club.nome}</h3>
-                <select value={statusValue} disabled={savingStatus} onChange={(event) => handleUpdateClubStatus(event.target.value)} className={statusSelectClass(statusValue, savingStatus)}>
+                <select value={statusValue} disabled={savingStatus || !allowUpdateStatus} onChange={(event) => handleUpdateClubStatus(event.target.value)} className={statusSelectClass(statusValue, savingStatus || !allowUpdateStatus)}>
                   <option value="pendente">🟠 PENDENTE</option>
                   <option value="em_andamento">🔵 EM ANDAMENTO</option>
                   <option value="concluido">🟢 CONCLUÍDO</option>
@@ -257,7 +280,7 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
               <div className="w-full xl:w-[34%] ui-surface-card ui-surface-card--pad flex flex-col h-[320px] sm:h-[340px] xl:h-full overflow-hidden shrink-0">
                 <div className="ui-section-head shrink-0 border-b border-gray-50 pb-4 mb-5">
                   <h4 className="font-black text-lg text-gray-800">Alunos</h4>
-                  <button type="button" onClick={() => setShowAlunoModal(true)} className="bg-gray-100 text-cetecBlue hover:bg-blue-50 font-black w-9 h-9 rounded-lg text-xl leading-none transition flex items-center justify-center">+</button>
+                  {allowCreateAluno && <button type="button" onClick={() => setShowAlunoModal(true)} className="bg-gray-100 text-cetecBlue hover:bg-blue-50 font-black w-9 h-9 rounded-lg text-xl leading-none transition flex items-center justify-center">+</button>}
                 </div>
                 <div className="flex-1 overflow-y-auto no-scrollbar pr-1">
                   {alunos.length === 0 && <div className="ui-state-panel ui-state-panel--empty">Nenhum aluno vinculado ainda.</div>}
@@ -272,14 +295,16 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
                             <span className="block text-gray-800 font-black leading-tight text-sm truncate">{aluno.nome}</span>
                             <span className="block text-xs font-bold text-gray-400 truncate mt-0.5">MAT: {aluno.matricula || 'S/ MATRÍCULA'}</span>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => removeAluno(aluno)}
-                            disabled={Boolean(alunoLoadingMap?.[aluno.id || `${aluno?.matricula || ''}-${aluno?.nome || ''}`])}
-                            className={`btn-3d font-black text-[10px] px-2.5 py-1.5 rounded-md border-b-[3px] transition-colors min-w-[74px] shrink-0 mt-0.5 sm:mt-0 ${Boolean(alunoLoadingMap?.[aluno.id || `${aluno?.matricula || ''}-${aluno?.nome || ''}`]) ? 'bg-gray-400 text-white border-gray-600 cursor-wait' : 'bg-gray-700 text-white border-gray-900 hover:bg-gray-800'}`}
-                          >
-                            {Boolean(alunoLoadingMap?.[aluno.id || `${aluno?.matricula || ''}-${aluno?.nome || ''}`]) ? '...' : 'REMOVER'}
-                          </button>
+                          {allowDeleteAluno && (
+                            <button
+                              type="button"
+                              onClick={() => removeAluno(aluno)}
+                              disabled={Boolean(alunoLoadingMap?.[aluno.id || `${aluno?.matricula || ''}-${aluno?.nome || ''}`])}
+                              className={`btn-3d font-black text-[10px] px-2.5 py-1.5 rounded-md border-b-[3px] transition-colors min-w-[74px] shrink-0 mt-0.5 sm:mt-0 ${Boolean(alunoLoadingMap?.[aluno.id || `${aluno?.matricula || ''}-${aluno?.nome || ''}`]) ? 'bg-gray-400 text-white border-gray-600 cursor-wait' : 'bg-gray-700 text-white border-gray-900 hover:bg-gray-800'}`}
+                            >
+                              {Boolean(alunoLoadingMap?.[aluno.id || `${aluno?.matricula || ''}-${aluno?.nome || ''}`]) ? '...' : 'REMOVER'}
+                            </button>
+                          )}
                         </div>
                       </li>
                     ))}
@@ -290,15 +315,15 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
               <div className="w-full xl:w-[66%] ui-surface-card ui-surface-card--pad flex flex-col h-full overflow-hidden relative">
                 <div className="ui-section-head shrink-0 border-b border-gray-50 pb-3 mb-4">
                   <h4 className="font-black text-lg text-gray-800">Cronograma da Trilha</h4>
-                  <button type="button" onClick={() => setShowEncontroModal(true)} className="bg-gray-100 text-cetecGreen hover:bg-green-50 font-black w-8 h-8 rounded-lg text-lg leading-none transition flex items-center justify-center">+</button>
+                  {allowCreateEncontro && <button type="button" onClick={() => setShowEncontroModal(true)} className="bg-gray-100 text-cetecGreen hover:bg-green-50 font-black w-8 h-8 rounded-lg text-lg leading-none transition flex items-center justify-center">+</button>}
                 </div>
 
                 <div className="flex-1 overflow-y-auto no-scrollbar pr-1 pb-4">
                   <div className="ui-card-grid ui-card-grid--single" style={{ gap: '1.25rem' }}>
-                    <ModuloSection title="1. SCRATCH" colorClass="bg-[#F3A712]" encontros={encontrosPorModulo['lista-scratch']} onToggleStatus={toggleEncontroStatus} onRemoveEncontro={removeEncontro} encontroLoadingMap={encontroLoadingMap} />
-                    <ModuloSection title="2. EV3" colorClass="bg-cetecBlue" encontros={encontrosPorModulo['lista-ev3']} onToggleStatus={toggleEncontroStatus} onRemoveEncontro={removeEncontro} encontroLoadingMap={encontroLoadingMap} />
-                    <ModuloSection title="3. MAKER / ARDUINO" colorClass="bg-cetecOrange" encontros={encontrosPorModulo['lista-maker']} onToggleStatus={toggleEncontroStatus} onRemoveEncontro={removeEncontro} encontroLoadingMap={encontroLoadingMap} />
-                    <ModuloSection title="4. PYTHON" colorClass="bg-cetecGreen" encontros={encontrosPorModulo['lista-python']} onToggleStatus={toggleEncontroStatus} onRemoveEncontro={removeEncontro} encontroLoadingMap={encontroLoadingMap} />
+                    <ModuloSection title="1. SCRATCH" colorClass="bg-[#F3A712]" encontros={encontrosPorModulo['lista-scratch']} onToggleStatus={toggleEncontroStatus} onRemoveEncontro={removeEncontro} onCanRemove={allowDeleteEncontro} onCanToggleStatus={allowUpdateStatus} encontroLoadingMap={encontroLoadingMap} />
+                    <ModuloSection title="2. EV3" colorClass="bg-cetecBlue" encontros={encontrosPorModulo['lista-ev3']} onToggleStatus={toggleEncontroStatus} onRemoveEncontro={removeEncontro} onCanRemove={allowDeleteEncontro} onCanToggleStatus={allowUpdateStatus} encontroLoadingMap={encontroLoadingMap} />
+                    <ModuloSection title="3. MAKER / ARDUINO" colorClass="bg-cetecOrange" encontros={encontrosPorModulo['lista-maker']} onToggleStatus={toggleEncontroStatus} onRemoveEncontro={removeEncontro} onCanRemove={allowDeleteEncontro} onCanToggleStatus={allowUpdateStatus} encontroLoadingMap={encontroLoadingMap} />
+                    <ModuloSection title="4. PYTHON" colorClass="bg-cetecGreen" encontros={encontrosPorModulo['lista-python']} onToggleStatus={toggleEncontroStatus} onRemoveEncontro={removeEncontro} onCanRemove={allowDeleteEncontro} onCanToggleStatus={allowUpdateStatus} encontroLoadingMap={encontroLoadingMap} />
                   </div>
                 </div>
               </div>
@@ -363,7 +388,7 @@ export function ClubDetailPage({ userName, onLogout, onOpenNewClubModal, clubes,
   );
 }
 
-function ModuloSection({ title, colorClass, encontros, onToggleStatus, onRemoveEncontro, encontroLoadingMap }) {
+function ModuloSection({ title, colorClass, encontros, onToggleStatus, onRemoveEncontro, onCanRemove, onCanToggleStatus, encontroLoadingMap }) {
   return (
     <details className="ui-surface-card group shadow-sm h-fit">
       <summary className={`font-black text-white p-3.5 text-sm cursor-pointer hover:opacity-90 transition rounded-t-2xl group-open:rounded-b-none rounded-b-2xl flex justify-between items-center outline-none ${colorClass}`}>
@@ -382,22 +407,26 @@ function ModuloSection({ title, colorClass, encontros, onToggleStatus, onRemoveE
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => onToggleStatus(enc)}
-                disabled={Boolean(encontroLoadingMap?.[enc.id])}
-                className={`btn-3d status-btn font-black text-[10px] px-2.5 py-1.5 rounded-md border-b-[3px] transition-colors min-w-[64px] ${Boolean(encontroLoadingMap?.[enc.id]) ? 'bg-gray-400 text-white border-gray-600 cursor-wait' : String(enc.status || '').toUpperCase() === 'FEITO' ? 'bg-green-500 text-white border-green-700' : 'bg-red-500 text-white border-red-700'}`}
-              >
-                {Boolean(encontroLoadingMap?.[enc.id]) ? '...' : String(enc.status || '').toUpperCase() === 'FEITO' ? 'FEITO' : 'A FAZER'}
-              </button>
-              <button
-                type="button"
-                onClick={() => onRemoveEncontro(enc)}
-                disabled={Boolean(encontroLoadingMap?.[enc.id])}
-                className={`btn-3d font-black text-[10px] px-2.5 py-1.5 rounded-md border-b-[3px] transition-colors min-w-[64px] ${Boolean(encontroLoadingMap?.[enc.id]) ? 'bg-gray-400 text-white border-gray-600 cursor-wait' : 'bg-gray-700 text-white border-gray-900 hover:bg-gray-800'}`}
-              >
-                REMOVER
-              </button>
+              {onCanToggleStatus && (
+                <button
+                  type="button"
+                  onClick={() => onToggleStatus(enc)}
+                  disabled={Boolean(encontroLoadingMap?.[enc.id])}
+                  className={`btn-3d status-btn font-black text-[10px] px-2.5 py-1.5 rounded-md border-b-[3px] transition-colors min-w-[64px] ${Boolean(encontroLoadingMap?.[enc.id]) ? 'bg-gray-400 text-white border-gray-600 cursor-wait' : String(enc.status || '').toUpperCase() === 'FEITO' ? 'bg-green-500 text-white border-green-700' : 'bg-red-500 text-white border-red-700'}`}
+                >
+                  {Boolean(encontroLoadingMap?.[enc.id]) ? '...' : String(enc.status || '').toUpperCase() === 'FEITO' ? 'FEITO' : 'A FAZER'}
+                </button>
+              )}
+              {onCanRemove && (
+                <button
+                  type="button"
+                  onClick={() => onRemoveEncontro(enc)}
+                  disabled={Boolean(encontroLoadingMap?.[enc.id])}
+                  className={`btn-3d font-black text-[10px] px-2.5 py-1.5 rounded-md border-b-[3px] transition-colors min-w-[64px] ${Boolean(encontroLoadingMap?.[enc.id]) ? 'bg-gray-400 text-white border-gray-600 cursor-wait' : 'bg-gray-700 text-white border-gray-900 hover:bg-gray-800'}`}
+                >
+                  REMOVER
+                </button>
+              )}
             </div>
           </div>
         ))}

@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import iconeEducacode from '../assets/icone.ico';
 import logoEducacode from '../assets/logo-educacode.png';
+import { canCreateClub } from '../utils/permissions';
 
-export function AppSidebar({ activeView, userName, onLogout, onOpenDashboard, onOpenClubs, onOpenNewClub }) {
+export function AppSidebar({ activeView, userName, userRole, onLogout, onOpenDashboard, onOpenClubs, onOpenNewClub }) {
   const [expanded, setExpanded] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
+  const allowCreateClub = canCreateClub(userRole);
 
   useEffect(() => {
     function handleResize() {
@@ -62,15 +64,17 @@ export function AppSidebar({ activeView, userName, onLogout, onOpenDashboard, on
               <span>Clubes</span>
             </button>
 
-            <button
-              type="button"
-              onClick={onOpenNewClub}
-              className="app-mobile-tab-btn"
-              title="Novo Clube"
-            >
-              <span className="material-symbols-rounded text-[18px]">add_circle</span>
-              <span>Novo</span>
-            </button>
+            {allowCreateClub && (
+              <button
+                type="button"
+                onClick={onOpenNewClub}
+                className="app-mobile-tab-btn"
+                title="Novo Clube"
+              >
+                <span className="material-symbols-rounded text-[18px]">add_circle</span>
+                <span>Novo</span>
+              </button>
+            )}
           </nav>
         </aside>
       </>
@@ -119,15 +123,17 @@ export function AppSidebar({ activeView, userName, onLogout, onOpenDashboard, on
           {expandedDesktop && <span className="whitespace-nowrap">Painel de Clubes</span>}
         </button>
 
-        <button
-          type="button"
-          onClick={onOpenNewClub}
-          className={`nav-btn ${expandedDesktop ? 'w-full justify-start px-5 py-3 rounded-2xl' : 'w-12 h-12 mx-auto justify-center rounded-xl'} bg-white/10 font-bold hover:bg-white/20 transition flex items-center border-b-4 border-transparent hover:border-white/20 text-sm`}
-          title="Novo Clube"
-        >
-          <span className={`material-symbols-rounded text-[20px] ${expandedDesktop ? 'mr-3' : ''}`}>add_circle</span>
-          {expandedDesktop && <span className="whitespace-nowrap">Novo Clube</span>}
-        </button>
+        {allowCreateClub && (
+          <button
+            type="button"
+            onClick={onOpenNewClub}
+            className={`nav-btn ${expandedDesktop ? 'w-full justify-start px-5 py-3 rounded-2xl' : 'w-12 h-12 mx-auto justify-center rounded-xl'} bg-white/10 font-bold hover:bg-white/20 transition flex items-center border-b-4 border-transparent hover:border-white/20 text-sm`}
+            title="Novo Clube"
+          >
+            <span className={`material-symbols-rounded text-[20px] ${expandedDesktop ? 'mr-3' : ''}`}>add_circle</span>
+            {expandedDesktop && <span className="whitespace-nowrap">Novo Clube</span>}
+          </button>
+        )}
       </nav>
 
       <div className={`${expandedDesktop ? 'p-6' : 'p-3'} space-y-2 text-xs text-white/75 font-bold transition-all duration-300`}>

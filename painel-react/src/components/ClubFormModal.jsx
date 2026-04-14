@@ -12,7 +12,7 @@ const EMPTY_FORM = {
   categoria: 'Clubes Iniciais',
 };
 
-export function ClubFormModal({ open, title, initialValues, onClose, onSubmit, saving }) {
+export function ClubFormModal({ open, title, initialValues, onClose, onSubmit, saving, error = '' }) {
   const [form, setForm] = useState(() => ({ ...EMPTY_FORM, ...initialValues }));
 
   if (!open) return null;
@@ -35,6 +35,7 @@ export function ClubFormModal({ open, title, initialValues, onClose, onSubmit, s
         </div>
 
         <form className="ui-modal-body space-y-4" onSubmit={handleSubmit}>
+          {error && <p className="text-sm font-bold text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">{error}</p>}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Nome" placeholder="Ex: UTEC GREGORIO 01" value={form.nome} onChange={(value) => updateField('nome', value)} required />
             <Field label="Escola" placeholder="Ex: E.M. João Cabral" value={form.escola} onChange={(value) => updateField('escola', value)} required />

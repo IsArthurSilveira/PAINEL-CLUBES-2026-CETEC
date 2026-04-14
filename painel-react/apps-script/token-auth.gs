@@ -31,11 +31,13 @@ function loginWithToken(payload) {
     createdAt.toISOString(),
     expiresAt.toISOString(),
     '',
+    toText(usuario.acesso || 'usuario'),
   ]);
 
   return {
     sucesso: true,
     nome: toText(usuario.nome || 'USUARIO'),
+    acesso: toText(usuario.acesso || 'usuario'),
     token,
     expira_em: expiresAt.toISOString(),
   };
@@ -49,6 +51,7 @@ function validateCurrentSession(payload) {
     sucesso: true,
     usuario_id: session.usuarioId,
     nome: session.nome,
+    acesso: session.acesso,
     expira_em: session.expiraEm,
   };
 }
@@ -106,6 +109,7 @@ function getValidSessionFromPayload_(payload) {
     return {
       usuarioId: toText(data[i][1]),
       nome: toText(data[i][2]),
+      acesso: normalizarNivelAcesso(data[i][6] || encontrarAcessoUsuario_(toText(data[i][1])) || 'usuario'),
       expiraEm: expiresAt.toISOString(),
     };
   }
@@ -141,37 +145,98 @@ function toText(value) {
   return String(value || '');
 }
 
+function findHeaderIndex(headers, aliases) {
+  if (!Array.isArray(headers) || headers.length === 0) return -1;
+
+  const normalizedAliases = aliases.map(normalizarChave);
+  for (let i = 0; i < headers.length; i += 1) {
+    const key = normalizarChave(headers[i]);
+    if (normalizedAliases.includes(key)) return i;
+  }
+
+  return -1;
+}
+
+function normalizarChave(valor) {
+  return String(valor || '').toLowerCase().replace(/[\s_\-]/g, '');
+}
+
 function getOrCreateSessionSheet_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName(SESSION_SHEET_NAME);
   if (!sheet) {
     sheet = ss.insertSheet(SESSION_SHEET_NAME);
-    sheet.appendRow(['token_hash', 'usuario_id', 'nome', 'created_at', 'expires_at', 'revoked_at']);
+    sheet.appendRow(['token_hash', 'usuario_id', 'nome', 'created_at', 'expires_at', 'revoked_at', 'acesso']);
   }
   return sheet;
 }
 
 // Substitua por sua fonte de usuarios. A senha deve estar hasheada no mundo ideal.
 function findUserByCredentials(email, senha) {
-  const usersSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('USUARIOS');
+  const usersSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('USUARIOS') || SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Usuarios');
   if (!usersSheet) return null;
 
   const rows = usersSheet.getDataRange().getValues();
-  // Colunas esperadas: A=id, B=nome, C=email, D=senha
+  const headers = rows.length ? rows[0] : [];
+  const idxEmail = findHeaderIndex(headers, ['EMAIL', 'E-MAIL', 'email', 'e-mail']);
+  const idxSenha = findHeaderIndex(headers, ['SENHA', 'senha', 'PASSWORD', 'password']);
+  const idxNome = findHeaderIndex(headers, ['NOME', 'nome', 'USUARIO', 'usuário', 'USUARIO_NOME']);
+  const idxAcesso = findHeaderIndex(headers, ['ACESSO', 'acesso', 'PERFIL', 'perfil', 'ROLE', 'role']);
+
   for (var i = 1; i < rows.length; i += 1) {
-    const rowEmail = toText(rows[i][2]).toLowerCase();
-    const rowSenha = toText(rows[i][3]);
+    const rowEmail = toText(rows[i][idxEmail >= 0 ? idxEmail : 2]).toLowerCase().trim();
+    const rowSenha = toText(rows[i][idxSenha >= 0 ? idxSenha : 3]).trim();
 
     if (rowEmail === email && rowSenha === senha) {
       return {
         id: rows[i][0],
-        nome: rows[i][1],
+        nome: toText(rows[i][idxNome >= 0 ? idxNome : 1]) || 'USUARIO',
         email: rowEmail,
+        acesso: normalizarNivelAcesso(rows[i][idxAcesso >= 0 ? idxAcesso : 4]),
       };
     }
   }
 
   return null;
+}
+
+function findUserByEmail(email) {
+  const usersSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('USUARIOS') || SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Usuarios');
+  if (!usersSheet) return null;
+
+  const rows = usersSheet.getDataRange().getValues();
+  const headers = rows.length ? rows[0] : [];
+  const idxEmail = findHeaderIndex(headers, ['EMAIL', 'E-MAIL', 'email', 'e-mail']);
+  const idxNome = findHeaderIndex(headers, ['NOME', 'nome', 'USUARIO', 'usuário', 'USUARIO_NOME']);
+  const idxAcesso = findHeaderIndex(headers, ['ACESSO', 'acesso', 'PERFIL', 'perfil', 'ROLE', 'role']);
+
+  for (var i = 1; i < rows.length; i += 1) {
+    const rowEmail = toText(rows[i][idxEmail >= 0 ? idxEmail : 2]).toLowerCase().trim();
+    if (rowEmail !== toText(email).toLowerCase().trim()) continue;
+
+    return {
+      id: rows[i][0],
+      nome: toText(rows[i][idxNome >= 0 ? idxNome : 1]) || 'USUARIO',
+      email: rowEmail,
+      acesso: normalizarNivelAcesso(rows[i][idxAcesso >= 0 ? idxAcesso : 4]),
+    };
+  }
+
+  return null;
+}
+
+function normalizarNivelAcesso(valor) {
+  const texto = toText(valor).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (texto.includes('admin')) return 'administrador';
+  if (texto.includes('leit') || texto.includes('read') || texto.includes('view')) return 'leitor';
+  if (texto.includes('usu') || texto.includes('user')) return 'usuario';
+  if (!texto) return 'usuario';
+  return texto;
+}
+
+function encontrarAcessoUsuario_(email) {
+  const usuario = findUserByEmail(email);
+  return usuario ? usuario.acesso : '';
 }
 
 /*
