@@ -1,20 +1,39 @@
 import { useState } from 'react';
-import { apiPost, setSessionToken } from '../services/api';
 import { Navigate } from 'react-router-dom';
+import { apiPost, setSessionToken } from '../services/api';
+import type { ApiBaseResponse } from '../services/api';
 
-export function LoginPageRoute({ userName, onLogin }) {
+interface LoginPayload {
+  name: string;
+  access: string;
+  token?: string;
+}
+
+interface LoginPageRouteProps {
+  userName: string;
+  onLogin: (payload: LoginPayload) => void;
+}
+
+interface LoginResponse extends ApiBaseResponse {
+  sucesso?: boolean;
+  token?: string;
+  nome?: string;
+  acesso?: string;
+}
+
+export function LoginPageRoute({ userName, onLogin }: LoginPageRouteProps) {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
 
-  async function handleSubmit(event) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setLoading(true);
     setErro('');
 
     try {
-      const data = await apiPost({ acao: 'login', email: email.trim(), senha });
+      const data = await apiPost<LoginResponse>({ acao: 'login', email: email.trim(), senha });
       if (data?.sucesso && data?.token) {
         setSessionToken(data.token);
         onLogin({ name: data.nome || 'Usuário', access: data.acesso || 'usuario', token: data.token });

@@ -8,7 +8,31 @@ import { ClubDetailPage } from './pages/ClubDetailPage';
 import { ClubFormPage } from './pages/ClubFormPage';
 import { LoginPageRoute } from './pages/LoginPageRoute';
 import { AUTH_EXPIRED_EVENT, clearSessionToken, getSessionToken, logoutSession, validateSession } from './services/api';
+import type { ApiBaseResponse } from './services/api';
 import { USER_ROLE_STORAGE_KEY, canCreateClub, normalizeAccessLevel } from './utils/permissions';
+
+interface AuthLoginPayload {
+  name: string;
+  access: string;
+  token?: string;
+}
+
+interface ClubFormValues {
+  nome: string;
+  escola: string;
+  utec: string;
+  prof: string;
+  estag: string;
+  dias: string;
+  horario: string;
+  categoria: string;
+}
+
+interface AuthContextValue {
+  userName: string;
+  login: (payload: AuthLoginPayload) => void;
+  logout: () => Promise<void>;
+}
 
 function App() {
   return (
@@ -104,9 +128,9 @@ function AppRoutes() {
     }
   }, [userName, sessionChecked, loadClubes]);
 
-  const auth = useMemo(() => ({
+  const auth = useMemo<AuthContextValue>(() => ({
     userName,
-    login: ({ name, access }) => {
+    login: ({ name, access }: AuthLoginPayload) => {
       localStorage.setItem('usuarioLogado', name);
       localStorage.setItem(USER_ROLE_STORAGE_KEY, normalizeAccessLevel(access));
       setUserName(name);
@@ -131,7 +155,7 @@ function AppRoutes() {
     setNewClubModalOpen(true);
   }
 
-  async function handleCreateClub(form) {
+  async function handleCreateClub(form: ClubFormValues) {
     setNewClubSaving(true);
     setNewClubModalError('');
     try {
@@ -245,9 +269,10 @@ function AppRoutes() {
   );
 }
 
-function getActionError(response, fallback) {
+function getActionError(response: ApiBaseResponse | unknown, fallback: string): string {
   if (!response || typeof response !== 'object') return fallback;
-  return response.erro || response.mensagem || response.message || fallback;
+  const result = response as ApiBaseResponse;
+  return String(result.erro || result.mensagem || result.message || fallback);
 }
 
 export default App;

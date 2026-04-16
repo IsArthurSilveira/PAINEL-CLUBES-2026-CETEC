@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { AppSidebar } from '../components/AppSidebar';
+import { BaseModal } from '../components/ui/BaseModal';
+import { FormSelect } from '../components/ui/FormSelect';
+import { FormTextInput } from '../components/ui/FormTextInput';
+import { ModalActionRow } from '../components/ui/ModalActionRow';
 import { formatDateBR, statusKey, toUpperText } from '../utils/clubes';
 import { canCreateAluno, canCreateEncontro, canDeleteAluno, canDeleteEncontro, canUpdateStatus } from '../utils/permissions';
 
@@ -27,8 +31,8 @@ export function ClubDetailPage({ userName, userRole, onLogout, onOpenNewClubModa
   const allowDeleteEncontro = canDeleteEncontro(userRole);
   const allowUpdateStatus = canUpdateStatus(userRole);
   const returnTo = location.state?.from || '/clubes';
-  const encontros = details?.encontros || [];
-  const alunos = details?.alunos || [];
+  const encontros = useMemo(() => details?.encontros || [], [details]);
+  const alunos = useMemo(() => details?.alunos || [], [details]);
 
   const encontrosPorModulo = useMemo(() => {
     const base = {
@@ -299,10 +303,10 @@ export function ClubDetailPage({ userName, userRole, onLogout, onOpenNewClubModa
                             <button
                               type="button"
                               onClick={() => removeAluno(aluno)}
-                              disabled={Boolean(alunoLoadingMap?.[aluno.id || `${aluno?.matricula || ''}-${aluno?.nome || ''}`])}
-                              className={`btn-3d font-black text-[10px] px-2.5 py-1.5 rounded-md border-b-[3px] transition-colors min-w-[74px] shrink-0 mt-0.5 sm:mt-0 ${Boolean(alunoLoadingMap?.[aluno.id || `${aluno?.matricula || ''}-${aluno?.nome || ''}`]) ? 'bg-gray-400 text-white border-gray-600 cursor-wait' : 'bg-gray-700 text-white border-gray-900 hover:bg-gray-800'}`}
+                              disabled={alunoLoadingMap?.[aluno.id || `${aluno?.matricula || ''}-${aluno?.nome || ''}`]}
+                              className={`btn-3d font-black text-[10px] px-2.5 py-1.5 rounded-md border-b-[3px] transition-colors min-w-[74px] shrink-0 mt-0.5 sm:mt-0 ${alunoLoadingMap?.[aluno.id || `${aluno?.matricula || ''}-${aluno?.nome || ''}`] ? 'bg-gray-400 text-white border-gray-600 cursor-wait' : 'bg-gray-700 text-white border-gray-900 hover:bg-gray-800'}`}
                             >
-                              {Boolean(alunoLoadingMap?.[aluno.id || `${aluno?.matricula || ''}-${aluno?.nome || ''}`]) ? '...' : 'REMOVER'}
+                              {alunoLoadingMap?.[aluno.id || `${aluno?.matricula || ''}-${aluno?.nome || ''}`] ? '...' : 'REMOVER'}
                             </button>
                           )}
                         </div>
@@ -333,56 +337,84 @@ export function ClubDetailPage({ userName, userRole, onLogout, onOpenNewClubModa
       </main>
 
       {showAlunoModal && (
-        <div className="fixed inset-0 bg-cetecBlue/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowAlunoModal(false)}>
-          <div className="ui-modal-card ui-modal-card--sm" onClick={(event) => event.stopPropagation()}>
-            <div className="ui-modal-head">
-              <h3 className="ui-modal-title">Adicionar Aluno</h3>
-              <button type="button" onClick={() => setShowAlunoModal(false)} className="ui-modal-close" aria-label="Fechar">X</button>
-            </div>
-            <form className="ui-modal-body space-y-4" onSubmit={handleSaveAluno}>
-              <input
-                className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cetecGreen font-bold text-sm text-gray-700"
-                placeholder="Matrícula (até 10 dígitos)"
-                inputMode="numeric"
-                maxLength={10}
-                pattern="[0-9]{0,10}"
-                title="Digite somente números, até 10 dígitos"
-                value={novoAluno.matricula}
-                onChange={(e) => handleAlunoMatriculaChange(e.target.value)}
-              />
-              <input className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cetecGreen font-bold text-sm text-gray-700" placeholder="Ex: ANA SOUZA" value={novoAluno.nome} autoCapitalize="characters" onChange={(e) => setNovoAluno((curr) => ({ ...curr, nome: toUpperText(e.target.value, '') }))} required />
-              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-1">
-                <button type="button" onClick={() => setShowAlunoModal(false)} className="bg-gray-200 text-gray-700 font-bold px-4 py-2 rounded-xl">Cancelar</button>
-                <button type="submit" disabled={savingAluno} className="btn-3d bg-cetecGreen text-white font-black px-5 py-2.5 rounded-xl border-b-[4px] border-cetecGreenDark hover:bg-[#7ed152]">{savingAluno ? 'Salvando...' : 'Salvar Aluno'}</button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <BaseModal
+          open={showAlunoModal}
+          onClose={() => setShowAlunoModal(false)}
+          title="Adicionar Aluno"
+          backdropClass="fixed inset-0 bg-cetecBlue/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          sizeClass="ui-modal-card ui-modal-card--sm"
+          contentAs="form"
+          contentProps={{ onSubmit: handleSaveAluno }}
+          bodyClass="ui-modal-body space-y-4"
+        >
+          <FormTextInput
+            placeholder="Matrícula (até 10 dígitos)"
+            inputMode="numeric"
+            maxLength={10}
+            pattern="[0-9]{0,10}"
+            title="Digite somente números, até 10 dígitos"
+            value={novoAluno.matricula}
+            onChange={(event) => handleAlunoMatriculaChange(event.target.value)}
+          />
+          <FormTextInput
+            placeholder="Ex: ANA SOUZA"
+            value={novoAluno.nome}
+            autoCapitalize="characters"
+            onChange={(event) => setNovoAluno((curr) => ({ ...curr, nome: toUpperText(event.target.value, '') }))}
+            required
+          />
+          <ModalActionRow
+            onCancel={() => setShowAlunoModal(false)}
+            submitLabel="Salvar Aluno"
+            saving={savingAluno}
+          />
+        </BaseModal>
       )}
 
       {showEncontroModal && (
-        <div className="fixed inset-0 bg-cetecBlue/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowEncontroModal(false)}>
-          <div className="ui-modal-card ui-modal-card--compact" onClick={(event) => event.stopPropagation()}>
-            <div className="ui-modal-head">
-              <h3 className="ui-modal-title">Adicionar Encontro</h3>
-              <button type="button" onClick={() => setShowEncontroModal(false)} className="ui-modal-close" aria-label="Fechar">X</button>
-            </div>
-            <form className="ui-modal-body space-y-4" onSubmit={handleSaveEncontro}>
-              <select className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cetecGreen font-bold text-sm text-gray-700" value={novoEncontro.modulo} onChange={(e) => setNovoEncontro((curr) => ({ ...curr, modulo: e.target.value }))}>
-                <option value="lista-scratch">SCRATCH</option>
-                <option value="lista-ev3">EV3</option>
-                <option value="lista-maker">MAKER / ARDUINO</option>
-                <option value="lista-python">PYTHON</option>
-              </select>
-              <input className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cetecGreen font-bold text-sm text-gray-700" placeholder="Ex: INTRODUÇÃO AO SCRATCH" value={novoEncontro.assunto} autoCapitalize="characters" onChange={(e) => setNovoEncontro((curr) => ({ ...curr, assunto: toUpperText(e.target.value, '') }))} required />
-              <input className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-cetecGreen font-bold text-sm text-gray-700" type="date" placeholder="Data do encontro" title="Selecione a data do encontro" value={novoEncontro.data} onChange={(e) => setNovoEncontro((curr) => ({ ...curr, data: e.target.value }))} required />
-              <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-1">
-                <button type="button" onClick={() => setShowEncontroModal(false)} className="bg-gray-200 text-gray-700 font-bold px-4 py-2 rounded-xl">Cancelar</button>
-                <button type="submit" disabled={savingEncontro} className="btn-3d bg-cetecGreen text-white font-black px-5 py-2.5 rounded-xl border-b-[4px] border-cetecGreenDark hover:bg-[#7ed152]">{savingEncontro ? 'Salvando...' : 'Salvar Encontro'}</button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <BaseModal
+          open={showEncontroModal}
+          onClose={() => setShowEncontroModal(false)}
+          title="Adicionar Encontro"
+          backdropClass="fixed inset-0 bg-cetecBlue/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          sizeClass="ui-modal-card ui-modal-card--compact"
+          contentAs="form"
+          contentProps={{ onSubmit: handleSaveEncontro }}
+          bodyClass="ui-modal-body space-y-4"
+        >
+          <FormSelect
+            value={novoEncontro.modulo}
+            onChange={(event) => setNovoEncontro((curr) => ({ ...curr, modulo: event.target.value }))}
+            options={[
+              { label: 'SCRATCH', value: 'lista-scratch' },
+              { label: 'EV3', value: 'lista-ev3' },
+              { label: 'MAKER / ARDUINO', value: 'lista-maker' },
+              { label: 'PYTHON', value: 'lista-python' },
+            ]}
+            getOptionLabel={(option) => option.label}
+            getOptionKey={(option) => option.value}
+          />
+          <FormTextInput
+            placeholder="Ex: INTRODUÇÃO AO SCRATCH"
+            value={novoEncontro.assunto}
+            autoCapitalize="characters"
+            onChange={(event) => setNovoEncontro((curr) => ({ ...curr, assunto: toUpperText(event.target.value, '') }))}
+            required
+          />
+          <FormTextInput
+            type="date"
+            placeholder="Data do encontro"
+            title="Selecione a data do encontro"
+            value={novoEncontro.data}
+            onChange={(event) => setNovoEncontro((curr) => ({ ...curr, data: event.target.value }))}
+            required
+          />
+          <ModalActionRow
+            onCancel={() => setShowEncontroModal(false)}
+            submitLabel="Salvar Encontro"
+            saving={savingEncontro}
+          />
+        </BaseModal>
       )}
     </div>
   );
@@ -411,18 +443,18 @@ function ModuloSection({ title, colorClass, encontros, onToggleStatus, onRemoveE
                 <button
                   type="button"
                   onClick={() => onToggleStatus(enc)}
-                  disabled={Boolean(encontroLoadingMap?.[enc.id])}
-                  className={`btn-3d status-btn font-black text-[10px] px-2.5 py-1.5 rounded-md border-b-[3px] transition-colors min-w-[64px] ${Boolean(encontroLoadingMap?.[enc.id]) ? 'bg-gray-400 text-white border-gray-600 cursor-wait' : String(enc.status || '').toUpperCase() === 'FEITO' ? 'bg-green-500 text-white border-green-700' : 'bg-red-500 text-white border-red-700'}`}
+                  disabled={encontroLoadingMap?.[enc.id]}
+                  className={`btn-3d status-btn font-black text-[10px] px-2.5 py-1.5 rounded-md border-b-[3px] transition-colors min-w-[64px] ${encontroLoadingMap?.[enc.id] ? 'bg-gray-400 text-white border-gray-600 cursor-wait' : String(enc.status || '').toUpperCase() === 'FEITO' ? 'bg-green-500 text-white border-green-700' : 'bg-red-500 text-white border-red-700'}`}
                 >
-                  {Boolean(encontroLoadingMap?.[enc.id]) ? '...' : String(enc.status || '').toUpperCase() === 'FEITO' ? 'FEITO' : 'A FAZER'}
+                  {encontroLoadingMap?.[enc.id] ? '...' : String(enc.status || '').toUpperCase() === 'FEITO' ? 'FEITO' : 'A FAZER'}
                 </button>
               )}
               {onCanRemove && (
                 <button
                   type="button"
                   onClick={() => onRemoveEncontro(enc)}
-                  disabled={Boolean(encontroLoadingMap?.[enc.id])}
-                  className={`btn-3d font-black text-[10px] px-2.5 py-1.5 rounded-md border-b-[3px] transition-colors min-w-[64px] ${Boolean(encontroLoadingMap?.[enc.id]) ? 'bg-gray-400 text-white border-gray-600 cursor-wait' : 'bg-gray-700 text-white border-gray-900 hover:bg-gray-800'}`}
+                  disabled={encontroLoadingMap?.[enc.id]}
+                  className={`btn-3d font-black text-[10px] px-2.5 py-1.5 rounded-md border-b-[3px] transition-colors min-w-[64px] ${encontroLoadingMap?.[enc.id] ? 'bg-gray-400 text-white border-gray-600 cursor-wait' : 'bg-gray-700 text-white border-gray-900 hover:bg-gray-800'}`}
                 >
                   REMOVER
                 </button>

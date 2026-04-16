@@ -4,6 +4,10 @@ const SHEET_ID = '1K3hdyrBGIsVTI_K1RJXO63qvX6cfIO7vLZf4wU1HL6E';
 const SESSION_SHEET_NAME = 'SESSOES';
 const SESSION_TTL_HOURS = 8;
 const SESSION_SECRET = PropertiesService.getScriptProperties().getProperty('SESSION_SECRET') || 'TROCAR_EM_PRODUCAO';
+const AUDIT_SHEET_NAME = 'AUDITORIA';
+const DAILY_BACKUP_TRIGGER_HANDLER = 'runDailyBackup';
+const DAILY_BACKUP_HOUR = 2;
+const BACKUP_RETENTION_DAYS = 30;
 
 function getDataHoraAtual() {
   return Utilities.formatDate(new Date(), "America/Recife", "dd/MM/yyyy HH:mm:ss");
@@ -26,6 +30,7 @@ function doPost(e) {
 function executarAcao(sheet, dadosReq) {
   const dataHora = getDataHoraAtual();
   const acao = String(dadosReq.acao || '').trim().toLowerCase();
+  let session = null;
 
   // ========== AUTENTICAÇÃO ==========
   // Tratar ações de autenticação (login, validar_sessao, logout)
@@ -34,7 +39,7 @@ function executarAcao(sheet, dadosReq) {
 
   // Para ações protegidas, validar token
   try {
-    const session = assertAuthorized(dadosReq);
+    session = assertAuthorized(dadosReq);
     if (!hasPermission(session.acesso, acao)) {
       return forbidden_();
     }
@@ -72,9 +77,9 @@ function executarAcao(sheet, dadosReq) {
   
   if (acao === 'salvar_clube') {
     const aba = sheet.getSheetByName('Clubes');
-    const novoId = Utilities.getUuid(); 
+    const novoId = Utilities.getUuid();
     aba.appendRow([novoId, dadosReq.nome, dadosReq.escola, dadosReq.utec, dadosReq.prof, dadosReq.estag, dadosReq.dias, dadosReq.horario, dadosReq.categoria, dadosReq.status || 'PENDENTE', dataHora, dataHora]);
-    return { sucesso: true, id: novoId };
+    return auditAndReturn_(session, acao, 'CLUBE', novoId, dadosReq, { sucesso: true, id: novoId });
   }
 
   if (acao === 'atualizar_clube') {
@@ -110,24 +115,24 @@ function executarAcao(sheet, dadosReq) {
       if (idxStatus >= 0 && dadosReq.status) aba.getRange(i + 1, idxStatus + 1).setValue(dadosReq.status);
       if (idxAtualizadoEm >= 0) aba.getRange(i + 1, idxAtualizadoEm + 1).setValue(dataHora);
 
-      return { sucesso: true, id: idBusca };
+      return auditAndReturn_(session, acao, 'CLUBE', idBusca, dadosReq, { sucesso: true, id: idBusca });
     }
 
-    return { sucesso: false, codigo: 'NAO_ENCONTRADO', erro: 'Clube não encontrado' };
+    return auditAndReturn_(session, acao, 'CLUBE', idBusca, dadosReq, { sucesso: false, codigo: 'NAO_ENCONTRADO', erro: 'Clube não encontrado' });
   }
 
   if (acao === 'salvar_encontro') {
     const aba = sheet.getSheetByName('Encontros');
     const novoId = Utilities.getUuid();
     aba.appendRow([novoId, dadosReq.id_clube, dadosReq.modulo, dadosReq.assunto, dadosReq.data, 'A FAZER', dataHora, dataHora]);
-    return { sucesso: true, id: novoId };
+    return auditAndReturn_(session, acao, 'ENCONTRO', novoId, dadosReq, { sucesso: true, id: novoId });
   }
 
   if (acao === 'salvar_aluno') {
     const aba = sheet.getSheetByName('Alunos');
     const novoId = Utilities.getUuid();
     aba.appendRow([novoId, dadosReq.id_clube, dadosReq.matricula, dadosReq.nome, dataHora]);
-    return { sucesso: true, id: novoId };
+    return auditAndReturn_(session, acao, 'ALUNO', novoId, dadosReq, { sucesso: true, id: novoId });
   }
 
   if (acao === 'atualizar_status_clube') {
@@ -139,10 +144,10 @@ function executarAcao(sheet, dadosReq) {
       if (String(dados[i][0]).trim() === idBusca) {
         aba.getRange(i + 1, 10).setValue(dadosReq.status); // Atualiza o Status
         aba.getRange(i + 1, 12).setValue(dataHora); // Atualiza Data de Modificação
-        return { sucesso: true };
+        return auditAndReturn_(session, acao, 'CLUBE', idBusca, dadosReq, { sucesso: true });
       }
     }
-    return { sucesso: false, codigo: 'NAO_ENCONTRADO', erro: 'Clube não encontrado' };
+    return auditAndReturn_(session, acao, 'CLUBE', idBusca, dadosReq, { sucesso: false, codigo: 'NAO_ENCONTRADO', erro: 'Clube não encontrado' });
   }
 
   if (acao === 'atualizar_status_encontro') {
@@ -154,10 +159,10 @@ function executarAcao(sheet, dadosReq) {
       if (String(dados[i][0]).trim() === idBusca) {
         aba.getRange(i + 1, 6).setValue(dadosReq.status); // Atualiza o Status
         aba.getRange(i + 1, 8).setValue(dataHora); // Atualiza Data de Modificação
-        return { sucesso: true };
+        return auditAndReturn_(session, acao, 'ENCONTRO', idBusca, dadosReq, { sucesso: true });
       }
     }
-    return { sucesso: false, codigo: 'NAO_ENCONTRADO', erro: 'Encontro não encontrado' };
+    return auditAndReturn_(session, acao, 'ENCONTRO', idBusca, dadosReq, { sucesso: false, codigo: 'NAO_ENCONTRADO', erro: 'Encontro não encontrado' });
   }
 
   if (acao === 'remover_encontro' || acao === 'excluir_encontro') {
@@ -171,11 +176,11 @@ function executarAcao(sheet, dadosReq) {
     for (let i = 1; i < dados.length; i++) {
       if (String(dados[i][idCol] || '').trim() === idBusca) {
         aba.deleteRow(i + 1);
-        return { sucesso: true };
+        return auditAndReturn_(session, acao, 'ENCONTRO', idBusca, dadosReq, { sucesso: true });
       }
     }
 
-    return { sucesso: false, codigo: 'NAO_ENCONTRADO', erro: 'Encontro não encontrado' };
+    return auditAndReturn_(session, acao, 'ENCONTRO', idBusca, dadosReq, { sucesso: false, codigo: 'NAO_ENCONTRADO', erro: 'Encontro não encontrado' });
   }
 
   if (acao === 'remover_aluno' || acao === 'excluir_aluno') {
@@ -195,7 +200,7 @@ function executarAcao(sheet, dadosReq) {
     for (let i = 1; i < dados.length; i++) {
       if (idBusca && String(dados[i][idCol] || '').trim() === idBusca) {
         aba.deleteRow(i + 1);
-        return { sucesso: true };
+        return auditAndReturn_(session, acao, 'ALUNO', idBusca, dadosReq, { sucesso: true });
       }
     }
 
@@ -217,12 +222,12 @@ function executarAcao(sheet, dadosReq) {
 
         if (clubeOk && matriculaOk && nomeOk) {
           aba.deleteRow(i + 1);
-          return { sucesso: true };
+          return auditAndReturn_(session, acao, 'ALUNO', idBusca || (idClubeBusca + '|' + matriculaBusca + '|' + nomeBusca), dadosReq, { sucesso: true });
         }
       }
     }
 
-    return { sucesso: false, codigo: 'NAO_ENCONTRADO', erro: 'Aluno não encontrado' };
+    return auditAndReturn_(session, acao, 'ALUNO', idBusca || (idClubeBusca + '|' + matriculaBusca + '|' + nomeBusca), dadosReq, { sucesso: false, codigo: 'NAO_ENCONTRADO', erro: 'Aluno não encontrado' });
   }
 
   return { sucesso: false, codigo: 'ACAO_INVALIDA', erro: 'Ação inválida' };
@@ -292,6 +297,120 @@ function sanitizarCallback(callback) {
   if (!valor) return '';
   if (/^[a-zA-Z_$][0-9a-zA-Z_$\.]*$/.test(valor)) return valor;
   return '';
+}
+
+function setupOperationalGuards() {
+  ensureDailyBackupTrigger_();
+  return { sucesso: true, mensagem: 'Backup diário configurado.' };
+}
+
+function runDailyBackup() {
+  const now = new Date();
+  const tz = Session.getScriptTimeZone() || 'America/Recife';
+  const timestamp = Utilities.formatDate(now, tz, 'yyyyMMdd_HHmmss');
+  const sourceFile = DriveApp.getFileById(SHEET_ID);
+  const backupName = sourceFile.getName() + ' - backup_' + timestamp;
+
+  const backupFolderId = PropertiesService.getScriptProperties().getProperty('BACKUP_FOLDER_ID') || '';
+  if (backupFolderId) {
+    const folder = DriveApp.getFolderById(backupFolderId);
+    sourceFile.makeCopy(backupName, folder);
+  } else {
+    sourceFile.makeCopy(backupName);
+  }
+
+  pruneOldBackups_();
+}
+
+function ensureDailyBackupTrigger_() {
+  const triggers = ScriptApp.getProjectTriggers();
+  const exists = triggers.some(t => t.getHandlerFunction && t.getHandlerFunction() === DAILY_BACKUP_TRIGGER_HANDLER);
+  if (exists) return;
+
+  ScriptApp.newTrigger(DAILY_BACKUP_TRIGGER_HANDLER)
+    .timeBased()
+    .everyDays(1)
+    .atHour(DAILY_BACKUP_HOUR)
+    .create();
+}
+
+function pruneOldBackups_() {
+  const backupFolderId = PropertiesService.getScriptProperties().getProperty('BACKUP_FOLDER_ID') || '';
+  if (!backupFolderId) return;
+
+  const folder = DriveApp.getFolderById(backupFolderId);
+  const files = folder.getFiles();
+  const sourceName = DriveApp.getFileById(SHEET_ID).getName();
+  const threshold = Date.now() - (BACKUP_RETENTION_DAYS * 24 * 60 * 60 * 1000);
+
+  while (files.hasNext()) {
+    const file = files.next();
+    const name = String(file.getName() || '');
+    if (!name.startsWith(sourceName + ' - backup_')) continue;
+    if (file.getDateCreated().getTime() < threshold) {
+      file.setTrashed(true);
+    }
+  }
+}
+
+function getOrCreateAuditSheet_() {
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  let auditSheet = ss.getSheetByName(AUDIT_SHEET_NAME);
+  if (!auditSheet) {
+    auditSheet = ss.insertSheet(AUDIT_SHEET_NAME);
+    auditSheet.appendRow([
+      'data_hora',
+      'acao',
+      'entidade',
+      'entidade_id',
+      'sucesso',
+      'codigo',
+      'usuario_id',
+      'usuario_nome',
+      'usuario_acesso',
+      'payload',
+    ]);
+  }
+  return auditSheet;
+}
+
+function sanitizePayloadForAudit_(payload) {
+  const input = payload && typeof payload === 'object' ? payload : {};
+  const out = {};
+  Object.keys(input).forEach((key) => {
+    const lower = String(key || '').toLowerCase();
+    if (lower === 'senha' || lower === 'token' || lower === 'authtoken') return;
+    out[key] = input[key];
+  });
+  return out;
+}
+
+function writeAuditEvent_(session, acao, entidade, entidadeId, payload, response) {
+  try {
+    const sheet = getOrCreateAuditSheet_();
+    const success = !!(response && (response.sucesso === true || response.SUCESSO === true));
+    const code = response && (response.codigo || response.erro || response.mensagem || response.message) || '';
+    const safePayload = sanitizePayloadForAudit_(payload);
+    sheet.appendRow([
+      new Date().toISOString(),
+      acao,
+      entidade,
+      entidadeId || '',
+      success,
+      String(code || ''),
+      toText(session && session.usuarioId || ''),
+      toText(session && session.nome || ''),
+      toText(session && session.acesso || ''),
+      JSON.stringify(safePayload),
+    ]);
+  } catch (err) {
+    console.error('Falha ao registrar auditoria:', err);
+  }
+}
+
+function auditAndReturn_(session, acao, entidade, entidadeId, payload, response) {
+  writeAuditEvent_(session, acao, entidade, entidadeId, payload, response);
+  return response;
 }
 
 // ========== AUTENTICAÇÃO POR TOKEN ==========

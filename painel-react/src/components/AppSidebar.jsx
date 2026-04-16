@@ -17,10 +17,6 @@ export function AppSidebar({ activeView, userName, userRole, onLogout, onOpenDas
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  useEffect(() => {
-    if (isMobile) setExpanded(true);
-  }, [isMobile]);
-
   const expandedDesktop = !isMobile && expanded;
 
   if (isMobile) {

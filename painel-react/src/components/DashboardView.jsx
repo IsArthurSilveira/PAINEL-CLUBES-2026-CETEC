@@ -399,25 +399,6 @@ function buildUtec(clubes) {
   };
 }
 
-function buildEscolasPorUtec(clubes) {
-  const map = clubes.reduce((acc, clube) => {
-    const utec = normalizeUtecKey(clube.utec);
-    const escola = normalizeEscolaKey(clube.escola);
-    if (!acc[utec]) acc[utec] = new Set();
-    acc[utec].add(escola);
-    return acc;
-  }, {});
-
-  const ordered = Object.entries(map)
-    .map(([utec, escolas]) => [utec, escolas.size])
-    .sort((a, b) => b[1] - a[1]);
-
-  return {
-    labels: ordered.length ? ordered.map(([utec]) => stripUtecPrefix(utec)) : ['Sem dados'],
-    values: ordered.length ? ordered.map(([, total]) => total) : [0],
-  };
-}
-
 function buildProgressoEncontros(clubes) {
   const faixas = [
     { label: '0 encontros', min: 0, max: 0 },
@@ -542,13 +523,6 @@ function computePercentualConclusao(clube) {
 
   const encontrosFeitos = sanitizeNumber(clube?.encontrosFeitos);
   return Math.max(0, Math.min(100, Math.round((encontrosFeitos / ENCONTROS_META_PADRAO) * 100)));
-}
-
-function shortLabel(value, max = 16) {
-  const text = String(value || '').trim();
-  if (!text) return '-';
-  if (text.length <= max) return text;
-  return `${text.slice(0, max - 3)}...`;
 }
 
 function buildLegendData(labels, values, colors) {

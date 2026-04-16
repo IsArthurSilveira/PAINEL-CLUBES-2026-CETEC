@@ -1,29 +1,68 @@
-export function pickField(record, aliases, fallback = '') {
+type RawRecord = Record<string, unknown>;
+
+export interface Clube {
+  id: string;
+  nome: string;
+  escola: string;
+  utec: string;
+  prof: string;
+  estag: string;
+  dias: string;
+  horario: string;
+  categoria: string;
+  status: string;
+}
+
+export interface Aluno {
+  id: string;
+  idClube: string;
+  matricula: string;
+  nome: string;
+  dataRegistro: string;
+}
+
+export interface Encontro {
+  id: string;
+  idClube: string;
+  modulo: string;
+  assunto: string;
+  data: string;
+  status: string;
+}
+
+function asRecord(value: unknown): RawRecord {
+  if (!value || typeof value !== 'object') return {};
+  return value as RawRecord;
+}
+
+export function pickField(record: unknown, aliases: string[], fallback: unknown = ''): unknown {
+  const safeRecord = asRecord(record);
   for (const key of aliases) {
-    if (record?.[key] !== undefined && record?.[key] !== null && String(record[key]).trim() !== '') {
-      return record[key];
+    const current = safeRecord[key];
+    if (current !== undefined && current !== null && String(current).trim() !== '') {
+      return current;
     }
   }
   return fallback;
 }
 
-export function toUpperText(value, fallback = '') {
+export function toUpperText(value: unknown, fallback = ''): string {
   const text = String(value ?? fallback).trim();
   return text ? text.toUpperCase() : String(fallback || '').toUpperCase();
 }
 
-export function statusKey(status) {
+export function statusKey(status: unknown): 'em_andamento' | 'concluido' | 'pendente' {
   const normalized = String(status || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
   if (normalized === 'em_andamento' || normalized === 'em_andamento.') return 'em_andamento';
   if (normalized === 'concluido' || normalized === 'concluído') return 'concluido';
   return 'pendente';
 }
 
-function normalizeId(value) {
+function normalizeId(value: unknown): string {
   return String(value ?? '').trim();
 }
 
-export function normalizeClube(raw) {
+export function normalizeClube(raw: unknown): Clube {
   return {
     id: normalizeId(pickField(raw, ['ID', 'id', 'ID_Clube', 'ID Clube'], '')),
     nome: toUpperText(pickField(raw, ['Nome', 'nome'], '-'), '-'),
@@ -38,7 +77,7 @@ export function normalizeClube(raw) {
   };
 }
 
-export function normalizeAluno(raw) {
+export function normalizeAluno(raw: unknown): Aluno {
   return {
     id: normalizeId(pickField(raw, ['ID_Aluno', 'ID Aluno', 'id', 'ID'], '')),
     idClube: normalizeId(pickField(raw, ['ID_Clube', 'ID Clube', 'id_clube'], '')),
@@ -48,7 +87,7 @@ export function normalizeAluno(raw) {
   };
 }
 
-export function normalizeEncontro(raw) {
+export function normalizeEncontro(raw: unknown): Encontro {
   return {
     id: normalizeId(pickField(raw, ['ID_Encontro', 'ID Encontro', 'id', 'ID'], '')),
     idClube: normalizeId(pickField(raw, ['ID_Clube', 'ID Clube', 'id_clube'], '')),
@@ -59,7 +98,7 @@ export function normalizeEncontro(raw) {
   };
 }
 
-export function parseShift(horario) {
+export function parseShift(horario: unknown): 'MANHÃ' | 'TARDE' {
   const match = String(horario || '').match(/(\d{1,2})\s*:\s*\d{2}/);
   if (!match) return 'TARDE';
   const hour = Number(match[1]);
@@ -67,20 +106,20 @@ export function parseShift(horario) {
   return hour < 12 ? 'MANHÃ' : 'TARDE';
 }
 
-export function statusLabel(status) {
+export function statusLabel(status: unknown): string {
   const key = statusKey(status);
   if (key === 'concluido') return 'CONCLUÍDO';
   if (key === 'em_andamento') return 'EM ANDAMENTO';
   return 'PENDENTE';
 }
 
-export function encontroStatusLabel(status) {
+export function encontroStatusLabel(status: unknown): string {
   return String(status || '').trim().toUpperCase() === 'FEITO' ? 'FEITO' : 'A FAZER';
 }
 
-export function formatDateBR(dateValue) {
+export function formatDateBR(dateValue: unknown): string {
   if (!dateValue) return '-';
-  const date = new Date(dateValue);
+  const date = new Date(String(dateValue));
   if (Number.isNaN(date.getTime())) return String(dateValue);
   return new Intl.DateTimeFormat('pt-BR').format(date);
 }
