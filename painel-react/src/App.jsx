@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
+import { HashRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { ClubFormModal } from './components/ClubFormModal';
 import { useClubes } from './hooks/useClubes';
 import { DashboardPage } from './pages/DashboardPage';
@@ -12,9 +12,9 @@ import { USER_ROLE_STORAGE_KEY, canCreateClub, normalizeAccessLevel } from './ut
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <AppRoutes />
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
